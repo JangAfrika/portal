@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>My Profile — JangAfrika</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <img src="logo.png" onerror="this.style.display='none'">
+    <div><h1>JangAfrika</h1><small>My Profile</small></div>
+  </div>
+  <nav class="no-print">
+    <a href="#" id="backLink">← Back to dashboard</a>
+    <a href="#" onclick="logout()">Log out</a>
+  </nav>
+</header>
+
+<div class="container">
+  <div class="card">
+    <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:center;">
+      <div style="text-align:center;">
+        <img id="photo" class="profile-photo" src="" alt="Profile photo">
+        <div class="no-print" style="margin-top:8px;">
+          <input type="file" id="photoInput" accept="image/*" style="display:none;">
+          <button class="secondary" type="button" onclick="document.getElementById('photoInput').click()">Change Photo</button>
+        </div>
+      </div>
+      <div style="flex:1;min-width:220px;">
+        <h2 id="pName" style="margin:0;">—</h2>
+        <div class="muted" id="pRole">—</div>
+        <div class="muted">ID: <span id="pId">—</span></div>
+        <div class="muted">Status: <span id="pStatus">—</span></div>
+      </div>
+      <div class="no-print">
+        <button class="accent" onclick="window.print()">🖨️ Print Profile</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Details</h3>
+    <form id="profileForm" class="grid cols-2">
+      <div><label>Full name</label><input type="text" id="fFullName"></div>
+      <div><label>Email (fixed)</label><input type="text" id="fEmail" disabled></div>
+      <div><label>Phone</label><input type="tel" id="fPhone"></div>
+      <div><label>Gender</label>
+        <select id="fGender"><option value="">—</option><option>Male</option><option>Female</option></select>
+      </div>
+      <div><label>Date of birth</label><input type="date" id="fDOB"></div>
+      <div><label>Address</label><input type="text" id="fAddress"></div>
+      <div class="no-print"><button type="submit" style="margin-top:18px;">Save changes</button></div>
+    </form>
+  </div>
+
+  <div class="card" id="paymentCard" style="display:none;">
+    <h3>Payment status</h3>
+    <p><span class="badge" id="payBadge">—</span></p>
+  </div>
+
+  <div class="card no-print">
+    <h3>Change password</h3>
+    <form id="passwordForm" class="grid cols-2">
+      <div><label>Current password</label><input type="password" id="curPassword" required></div>
+      <div></div>
+      <div><label>New password</label><input type="password" id="newPassword" required minlength="6"></div>
+      <div><label>Confirm new password</label><input type="password" id="confirmPassword" required minlength="6"></div>
+      <div><button type="submit">Change password</button></div>
+    </form>
+    <p id="pwMsg" class="muted"></p>
+  </div>
+</div>
+
+<footer class="sitefooter no-print">
+  JangAfrika · Est. 2025, Gunjur · info.jangafrica@gmail.com · (+220) 2630798/5944287<br>
+  Powered by JangAfrika
+</footer>
+
+<script src="config.js"></script>
+<script>
+const me = requirePage();
+const dashByRole = { Admin: 'admin.html', Staff: 'staff.html', Student: 'student.html', Parent: 'parent.html' };
+document.getElementById('backLink').href = dashByRole[me.Role] || 'index.html';
+
+async function load() {
+  const target = new URLSearchParams(location.search).get('userId') || me.UserID;
+  const p = await api('getProfile', { userId: target });
+  document.getElementById('photo').src = p.PhotoURL || 'https://placehold.co/110x110?text=Photo';
+  document.getElementById('pName').textContent = p.FullName;
+  document.getElementById('pRole').textContent = p.Role;
+  document.getElementById('pId').textContent = p.UserID;
+  document.getElementById('pStatus').textContent = p.Status;
+  document.getElementById('fFullName').value = p.FullName || '';
+  document.getElementById('fEmail').value = p.Email || '';
+  document.getElementById('fPhone').value = p.Phone || '';
+  document.getElementById('fGender').value = p.Gender || '';
+  document.getElementById('fDOB').value = p.DOB ? String(p.DOB).slice(0, 10) : '';
+  document.getElementById('fAddress').value = p.Address || '';
+
+  if (p.Role === 'Student') {
+    document.getElementById('paymentCard').style.display = 'block';
+    const badge = document.getElementById('payBadge');
+    const tierInfo = paymentTierBadge(p.PaymentStatus);
+    badge.textContent = tierInfo.label;
+    badge.className = 'badge ' + tierInfo.className;
+  }
+}
+load();
+
+document.getElementById('photoInput').addEventListener('change', async function () {
+  const file = this.files[0];
+  if (!file) return;
+  this.disabled = true;
+  try {
+    const b64 = await fileToBase64(file);
+    const p = await api('uploadProfilePhoto', { photoBase64: b64 });
+    document.getElementById('photo').src = p.PhotoURL;
+    toast('Photo updated');
+  } catch (err) { toast(err.message, true); }
+  finally { this.disabled = false; }
+});
+
+guardSubmit(document.getElementById('profileForm'), async function () {
+  await api('updateProfile', {
+    FullName: document.getElementById('fFullName').value,
+    Phone: document.getElementById('fPhone').value,
+    Gender: document.getElementById('fGender').value,
+    DOB: document.getElementById('fDOB').value,
+    Address: document.getElementById('fAddress').value
+  });
+  toast('Profile saved');
+  await load();
+});
+
+guardSubmit(document.getElementById('passwordForm'), async function () {
+  const msg = document.getElementById('pwMsg');
+  msg.style.color = '';
+  const newPw = document.getElementById('newPassword').value;
+  const confirmPw = document.getElementById('confirmPassword').value;
+  if (newPw !== confirmPw) {
+    msg.style.color = '#b3261e';
+    msg.textContent = 'New password and confirmation do not match.';
+    return;
+  }
+  try {
+    await api('changePassword', {
+      currentPassword: document.getElementById('curPassword').value,
+      newPassword: newPw
+    });
+    msg.style.color = '#0b5d3b';
+    msg.textContent = 'Password changed successfully.';
+    document.getElementById('passwordForm').reset();
+    toast('Password changed');
+  } catch (err) {
+    msg.style.color = '#b3261e';
+    msg.textContent = err.message;
+  }
+});
+</script>
+</body>
+</html>

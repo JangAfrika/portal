@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Past Questions — JangAfrika</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <img src="logo.png" onerror="this.style.display='none'">
+    <div><h1>JangAfrika</h1><small>Past Questions</small></div>
+  </div>
+  <nav>
+    <span style="margin-right:16px;text-align:right;display:inline-block;">
+      <strong id="whoamiName">—</strong><br><small id="whoamiRole" style="opacity:.85;">—</small>
+    </span>
+    <a href="#" id="backLink">← Back to dashboard</a>
+    <a href="#" onclick="logout()">Log out</a>
+  </nav>
+</header>
+
+<div class="container">
+  <!-- STEP 1: subjects -->
+  <div class="card" id="stepSubjects">
+    <h2>1. Choose a subject</h2>
+    <div id="subjectButtons" class="grid cols-3"></div>
+  </div>
+
+  <!-- STEP 2: years -->
+  <div class="card hidden" id="stepYears">
+    <h2>2. Choose a year — <span id="chosenSubjectName"></span></h2>
+    <div id="yearButtons" class="grid cols-3"></div>
+    <button class="secondary" id="backToSubjects" style="margin-top:12px;">← Back to subjects</button>
+  </div>
+
+  <!-- STEP 3: objective / theory -->
+  <div class="card hidden" id="stepPapers">
+    <h2>3. <span id="chosenYearLabel"></span></h2>
+    <div id="papersList" class="grid cols-2"></div>
+    <button class="secondary" id="backToYears" style="margin-top:12px;">← Back to years</button>
+  </div>
+
+  <!-- STEP 4a: objective quiz -->
+  <div class="card hidden" id="stepObjective">
+    <h2 id="objectiveTitle"></h2>
+    <div id="attemptSummary" class="muted" style="margin-bottom:10px;"></div>
+    <div id="objectiveQuestions"></div>
+    <button id="submitObjectiveBtn">Submit answers</button>
+    <button class="secondary" id="downloadObjectiveBtn" style="margin-left:8px;">⬇️ Download paper as PDF</button>
+    <button class="secondary" id="backToPapersFromObjective" style="margin-left:8px;">← Back</button>
+  </div>
+
+  <!-- STEP 4b: theory (PDF only) -->
+  <div class="card hidden" id="stepTheory">
+    <h2 id="theoryTitle"></h2>
+    <p class="muted">This is a Theory paper — download the question paper as a watermarked PDF.</p>
+    <button id="downloadTheoryBtn">⬇️ Download PDF</button>
+    <button class="secondary" id="backToPapersFromTheory" style="margin-left:8px;">← Back</button>
+  </div>
+</div>
+
+<footer class="sitefooter">
+  JangAfrika · Est. 2025, Gunjur · info.jangafrica@gmail.com · (+220) 2630798/5944287<br>
+  Powered by JangAfrika
+</footer>
+
+<script src="config.js"></script>
+<script src="past-questions.js"></script>
+</body>
+</html>

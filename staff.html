@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Staff Dashboard — JangAfrika</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <img src="logo.png" onerror="this.style.display='none'">
+    <div><h1>JangAfrika</h1><small>Staff Dashboard</small></div>
+  </div>
+  <nav>
+    <span style="margin-right:16px;text-align:right;display:inline-block;">
+      <strong id="whoamiName">—</strong><br><small id="whoamiRole" style="opacity:.85;">—</small>
+    </span>
+    <a href="profile.html">My Profile</a>
+    <a href="#" onclick="logout()">Log out</a>
+  </nav>
+</header>
+
+<div class="container">
+  <div class="tabs no-print">
+    <button data-tab="attendance" class="active">Attendance</button>
+    <button data-tab="materials">Materials</button>
+    <button data-tab="assignments">Assignments</button>
+    <button data-tab="grading">Grade Submissions</button>
+    <button data-tab="tasks">Topic Tasks</button>
+    <button data-tab="lessonplans">Lesson Plan</button>
+    <button data-tab="syllabus">Syllabus</button>
+    <button data-tab="curriculum">Curriculum &amp; QA</button>
+    <button data-tab="pastquestions">Past Questions</button>
+  </div>
+
+  <!-- ATTENDANCE -->
+  <div id="tab-attendance" class="tabpane">
+    <div class="card">
+      <h2>Mark attendance</h2>
+      <label>Subject</label><select id="attSubject"></select>
+      <label>Date</label><input type="date" id="attDate">
+      <table id="attTable">
+        <thead><tr><th>Student</th><th>Status</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <button id="attSubmit" style="margin-top:12px;">Save attendance</button>
+    </div>
+    <div class="card">
+      <h2>Attendance history</h2>
+      <label>Filter by subject</label><select id="attHistorySubject"></select>
+      <table>
+        <thead><tr><th>Date</th><th>Student</th><th>Subject</th><th>Status</th></tr></thead>
+        <tbody id="attHistoryBody"><tr><td colspan="4" class="muted">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- MATERIALS -->
+  <div id="tab-materials" class="tabpane hidden">
+    <div class="card">
+      <h2>Upload learning material</h2>
+      <form id="materialForm" class="grid cols-2">
+        <div><label>Subject</label><select id="matSubject"></select></div>
+        <div><label>Topic (optional)</label><select id="matTopic"><option value="">—</option></select></div>
+        <div><label>Title</label><input type="text" id="matTitle" required></div>
+        <div><label>File</label><input type="file" id="matFile"></div>
+        <div style="grid-column:1/-1;"><label>Description</label><textarea id="matDesc"></textarea></div>
+        <div><button type="submit">Upload</button></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ASSIGNMENTS -->
+  <div id="tab-assignments" class="tabpane hidden">
+    <div class="card">
+      <h2>Create assignment</h2>
+      <form id="assignmentForm" class="grid cols-2">
+        <div><label>Subject</label><select id="asgSubject"></select></div>
+        <div><label>Topic (optional)</label><select id="asgTopic"><option value="">—</option></select></div>
+        <div><label>Title</label><input type="text" id="asgTitle" required></div>
+        <div><label>Term</label><input type="text" id="asgTerm" placeholder="Term 1"></div>
+        <div><label>Due date</label><input type="date" id="asgDue"></div>
+        <div><label>Max score</label><input type="number" id="asgMax" value="100"></div>
+        <div><label>Attachment (optional)</label><input type="file" id="asgFile"></div>
+        <div style="grid-column:1/-1;"><label>Description</label><textarea id="asgDesc"></textarea></div>
+        <div><button type="submit">Create assignment</button></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- GRADING -->
+  <div id="tab-grading" class="tabpane hidden">
+    <div class="card">
+      <h2>Student submissions</h2>
+      <label>Filter by assignment</label>
+      <select id="gradeAssignment"></select>
+      <table>
+        <thead><tr><th>Student</th><th>Submitted</th><th>File</th><th>Score</th><th>Grade</th><th>Feedback</th><th></th></tr></thead>
+        <tbody id="submissionsBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TASKS -->
+  <div id="tab-tasks" class="tabpane hidden">
+    <div class="card">
+      <h2>Create a topic mastery task (quiz)</h2>
+      <p class="muted">Add questions with multiple choice options; students get a percentage pass/fail once submitted.</p>
+      <form id="taskForm" class="grid cols-2">
+        <div><label>Subject</label><select id="taskSubject"></select></div>
+        <div><label>Topic</label><select id="taskTopic"></select></div>
+        <div><label>Title</label><input type="text" id="taskTitle" required></div>
+        <div><label>Pass mark (%)</label><input type="number" id="taskPass" value="50"></div>
+      </form>
+      <div id="questionsBuilder"></div>
+      <button type="button" id="addQuestionBtn" class="secondary">+ Add question</button>
+      <button type="button" id="saveTaskBtn" style="margin-left:8px;">Save task</button>
+    </div>
+    <div class="card">
+      <h2>Task results</h2>
+      <table>
+        <thead><tr><th>Student</th><th>Task</th><th>Score</th><th>%</th><th>Result</th><th>Recommendation</th><th>Date</th></tr></thead>
+        <tbody id="taskResultsBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- LESSON REPORT -->
+  <div id="tab-lessonplans" class="tabpane hidden">
+    <div class="card">
+      <h2>Lesson plan templates for my subjects</h2>
+      <p class="muted">Templates the admin has created for your subject(s) — downloadable as CSV or Word, ready to fill in.</p>
+      <table>
+        <thead><tr><th>Subject</th><th>Title</th><th>File</th></tr></thead>
+        <tbody id="lpTemplatesBody"><tr><td colspan="3" class="muted">Loading…</td></tr></tbody>
+      </table>
+      <a class="btn secondary" href="lesson-plan-template.html" target="_blank" style="margin-top:10px;display:inline-block;">Or open the generic starter template</a>
+    </div>
+    <div class="card">
+      <h2>Upload a lesson plan</h2>
+      <p class="muted">This is your planning document for a lesson — what you intend to teach and how, before you teach it.
+        It's a different thing from a <strong>lesson report</strong>: for the report you give after teaching (which is what
+        unlocks marking a sub-topic Complete), use the Curriculum &amp; QA tab instead.</p>
+      <form id="lpForm" class="grid cols-2">
+        <div><label>Subject</label><select id="lpSubject"></select></div>
+        <div><label>Topic</label><select id="lpTopic"><option value="">—</option></select></div>
+        <div><label>Sub-topic (optional)</label><select id="lpSubtopic"><option value="">—</option></select></div>
+        <div><label>Title</label><input type="text" id="lpTitle" required></div>
+        <div><label>Planned lesson date</label><input type="date" id="lpDate"></div>
+        <div style="grid-column:1/-1;"><label>Objectives</label><textarea id="lpObjectives" placeholder="What students should be able to do by the end of this lesson"></textarea></div>
+        <div style="grid-column:1/-1;"><label>Planned activities</label><textarea id="lpActivities" placeholder="How you plan to teach it — intro, main activity, practice, wrap-up"></textarea></div>
+        <div style="grid-column:1/-1;"><label>Resources needed</label><textarea id="lpResources"></textarea></div>
+        <div><label>Or attach a filled template file</label><input type="file" id="lpFile"></div>
+        <div><button type="submit">Submit for review</button></div>
+      </form>
+    </div>
+    <div class="card">
+      <h2>My lesson plans</h2>
+      <table>
+        <thead><tr><th>Title</th><th>Subject</th><th>Sub-topic</th><th>Status</th><th>Date</th><th>File</th></tr></thead>
+        <tbody id="lpBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SYLLABUS -->
+  <div id="tab-syllabus" class="tabpane hidden">
+    <div class="card">
+      <h2>Syllabus templates for my subjects</h2>
+      <p class="muted">Templates the admin has created for your subject(s) — downloadable as CSV or Word, ready to fill in.</p>
+      <table>
+        <thead><tr><th>Subject</th><th>Title</th><th>File</th></tr></thead>
+        <tbody id="sylTemplatesBody"><tr><td colspan="3" class="muted">Loading…</td></tr></tbody>
+      </table>
+      <a class="btn secondary" href="syllabus-template.html" target="_blank" style="margin-top:10px;display:inline-block;">Or open the generic starter template</a>
+    </div>
+    <div class="card">
+      <h2>Upload completed syllabus</h2>
+      <form id="sylForm" class="grid cols-2">
+        <div><label>Subject</label><select id="sylSubject"></select></div>
+        <div><label>Topic (optional)</label><select id="sylTopic"><option value="">—</option></select></div>
+        <div><label>Term</label><input type="text" id="sylTerm"></div>
+        <div><label>Week number</label><input type="number" id="sylWeek"></div>
+        <div style="grid-column:1/-1;"><label>Content / notes</label><textarea id="sylContent"></textarea></div>
+        <div><label>Or attach filled template file</label><input type="file" id="sylFile"></div>
+        <div><button type="submit">Upload</button></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- CURRICULUM & QUALITY ASSURANCE -->
+  <div id="tab-curriculum" class="tabpane hidden">
+    <div class="card">
+      <h2>Topic progress</h2>
+      <p class="muted">Every sub-topic needs a lesson report submitted below (in that sub-topic's row, or via the form at the bottom of its topic) before it can be marked Complete.</p>
+      <label>Subject</label><select id="curSubject"></select>
+      <div id="curTopicsContainer"></div>
+    </div>
+    <div class="card">
+      <h2>My lesson reports — review status</h2>
+      <p class="muted">Admin approves or rejects each lesson report you submit below. Status shows here once reviewed.</p>
+      <table>
+        <thead><tr><th>Title</th><th>Topic</th><th>Status</th><th>Reviewer notes</th></tr></thead>
+        <tbody id="curLrReviewBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- PAST QUESTIONS -->
+  <div id="tab-pastquestions" class="tabpane hidden">
+    <div class="card">
+      <h2>Assign a past paper to students</h2>
+      <p class="muted">Only papers for subjects you teach show here. Assigning an Objective paper lets you track each student's score; assigning a Theory paper just flags it as something they should download and review.</p>
+      <label>Subject</label><select id="ppSubject"></select>
+      <label>Paper</label><select id="ppPaper"></select>
+      <div id="ppStudentPicker" style="margin-top:10px;"></div>
+      <button id="ppAssignBtn" style="margin-top:10px;">Assign to selected students</button>
+    </div>
+    <div class="card">
+      <h2>My assignments</h2>
+      <table>
+        <thead><tr><th>Paper</th><th>Subject</th><th>Student</th><th>Assigned</th><th>Score</th></tr></thead>
+        <tbody id="ppAssignmentsBody"><tr><td colspan="5" class="muted">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<footer class="sitefooter">
+  JangAfrika · Est. 2025, Gunjur · info.jangafrica@gmail.com · (+220) 2630798/5944287<br>
+  Powered by JangAfrika
+</footer>
+
+<script src="config.js"></script>
+<script src="staff.js"></script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>JangAfrika — Register</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="auth-wrap">
+  <div class="card auth-card" style="max-width:480px;">
+    <div class="logo-row">
+      <img src="logo.png" alt="JangAfrika logo" onerror="this.style.display='none'">
+      <h2 style="margin:8px 0 0;">Create your account</h2>
+      <div class="muted">Your request is reviewed by an admin before you can log in.</div>
+    </div>
+
+    <form id="regForm">
+      <label>I am registering as</label>
+      <select id="role" required>
+        <option value="Student">Student</option>
+        <option value="Staff">Staff (Teacher)</option>
+        <option value="Parent">Parent</option>
+      </select>
+
+      <label>Full name</label>
+      <input type="text" id="fullName" required>
+
+      <label>Email</label>
+      <input type="email" id="email" required>
+
+      <label>Phone</label>
+      <input type="tel" id="phone">
+
+      <label>Password</label>
+      <input type="password" id="password" required minlength="6">
+
+      <div id="parentOnly" class="hidden">
+        <label>Your child's/children's registered email(s) — comma separated</label>
+        <input type="text" id="linkedStudentEmails" placeholder="child1@email.com, child2@email.com">
+        <p class="muted">Only students who are already registered can be linked. If your child isn't registered yet, ask them to register first.</p>
+      </div>
+
+      <label>Profile photo (optional)</label>
+      <input type="file" id="photo" accept="image/*">
+
+      <button type="submit" style="width:100%;margin-top:18px;">Submit Registration</button>
+    </form>
+    <p id="msg" class="muted"></p>
+    <p style="text-align:center;margin-top:16px;">
+      Already have an account? <a href="index.html">Log in</a>
+    </p>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script>
+document.getElementById('role').addEventListener('change', function () {
+  document.getElementById('parentOnly').classList.toggle('hidden', this.value !== 'Parent');
+});
+
+document.getElementById('regForm').addEventListener('submit', async function (e) {
+  e.preventDefault();
+  const btn = document.querySelector('#regForm button[type=submit]');
+  if (btn.disabled) return; // prevents double-submit from a fast double-click
+  btn.disabled = true; const originalText = btn.textContent; btn.textContent = 'Submitting…';
+  const msg = document.getElementById('msg');
+  msg.style.color = '';
+  msg.textContent = 'Submitting...';
+  try {
+    const photoFile = document.getElementById('photo').files[0];
+    const photoBase64 = photoFile ? await fileToBase64(photoFile) : '';
+
+    await api('register', {
+      requestedRole: document.getElementById('role').value,
+      fullName: document.getElementById('fullName').value.trim(),
+      email: document.getElementById('email').value.trim(),
+      phone: document.getElementById('phone').value.trim(),
+      password: document.getElementById('password').value,
+      linkedStudentEmails: document.getElementById('linkedStudentEmails').value.trim(),
+      photoBase64: photoBase64
+    });
+    msg.style.color = '#0b5d3b';
+    msg.textContent = 'Submitted! An admin will review your request. You will be able to log in once approved.';
+    document.getElementById('regForm').reset();
+  } catch (err) {
+    msg.style.color = '#b3261e';
+    msg.textContent = err.message;
+  } finally {
+    btn.disabled = false; btn.textContent = originalText;
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>JangAfrika — Login</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="auth-wrap">
+  <div class="card auth-card">
+    <div class="logo-row">
+      <img src="logo.png" alt="JangAfrika logo" onerror="this.style.display='none'">
+      <h2 style="margin:8px 0 0;">JangAfrika</h2>
+      <div class="muted">Online Learning Platform · Est. 2025 · Gunjur</div>
+    </div>
+
+    <form id="loginForm">
+      <label>Email</label>
+      <input type="email" id="email" required>
+      <label>Password</label>
+      <input type="password" id="password" required>
+      <button type="submit" style="width:100%;margin-top:18px;">Log In</button>
+    </form>
+    <p id="msg" class="muted"></p>
+    <p style="text-align:center;margin-top:16px;">
+      New here? <a href="register.html">Register an account</a>
+    </p>
+    <p class="muted" style="text-align:center;">
+      ✉️ info.jangafrica@gmail.com · 📱 (+220) 2630798/5944287
+    </p>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script>
+guardSubmit(document.getElementById('loginForm'), async function () {
+  const msg = document.getElementById('msg');
+  msg.textContent = 'Logging in...';
+  try {
+    const data = await api('login', {
+      email: document.getElementById('email').value.trim(),
+      password: document.getElementById('password').value
+    });
+    setSession(data.token, data.user);
+    const role = data.user.Role;
+    const dest = { Admin: 'admin.html', Staff: 'staff.html', Student: 'student.html', Parent: 'parent.html' }[role] || 'index.html';
+    window.location.href = dest;
+  } catch (err) {
+    msg.textContent = err.message;
+    msg.style.color = '#b3261e';
+  }
+});
+// If already logged in, skip straight to dashboard
+(function () {
+  const u = getUser();
+  if (u && getToken()) {
+    const dest = { Admin: 'admin.html', Staff: 'staff.html', Student: 'student.html', Parent: 'parent.html' }[u.Role];
+    if (dest) window.location.href = dest;
+  }
+})();
+</script>
+</body>
+</html>

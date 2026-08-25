@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Syllabus Template — JangAfrika</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <img src="logo.png" onerror="this.style.display='none'">
+    <div><h1>JangAfrika</h1><small>Syllabus Template</small></div>
+  </div>
+  <nav class="no-print"><a href="javascript:history.back()">← Back</a></nav>
+</header>
+
+<div class="container">
+  <div class="card">
+    <h2>Generic starter syllabus template</h2>
+    <p class="muted">A blank, editable starting point. Download it, fill it in with your own software (Excel/Word), then upload the completed file from your Staff Dashboard's Syllabus tab. If your admin has already created a template specific to your subject, use that instead — it'll show on your Staff Dashboard's Syllabus tab too.</p>
+    <button id="downloadCsvBtn">⬇️ Download as CSV (editable in Excel/Sheets)</button>
+    <button id="downloadDocBtn" class="secondary" style="margin-left:8px;">⬇️ Download as Word document</button>
+  </div>
+
+  <div class="card">
+    <h2>Preview</h2>
+    <table id="previewTable">
+      <thead><tr><th>Week</th><th>Subject</th><th>Topic</th><th>Term</th><th>Content / Learning Outcomes</th><th>Resources</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2</td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>3</td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>4</td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>5</td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>6</td><td></td><td></td><td></td><td></td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<footer class="sitefooter">
+  JangAfrika · Est. 2025, Gunjur · info.jangafrica@gmail.com · (+220) 2630798/5944287<br>
+  Powered by JangAfrika
+</footer>
+
+<script src="config.js"></script>
+<script>
+const headers = ['Week', 'Subject', 'Topic', 'Term', 'Content / Learning Outcomes', 'Resources'];
+const blankRows = [1, 2, 3, 4, 5, 6].map(function (w) { return [w, '', '', '', '', '']; });
+
+document.getElementById('downloadCsvBtn').addEventListener('click', function () {
+  downloadCSV('JangAfrika_Syllabus_Template.csv', [headers].concat(blankRows));
+});
+
+document.getElementById('downloadDocBtn').addEventListener('click', function () {
+  let rowsHtml = blankRows.map(function (r) {
+    return '<tr>' + r.map(function (c) { return '<td style="border:1px solid #ccc;padding:6px;">' + (c || '&nbsp;') + '</td>'; }).join('') + '</tr>';
+  }).join('');
+  const html = '<h2>JangAfrika — Syllabus Template</h2>' +
+    '<p>School: JangAfrika &nbsp; | &nbsp; Teacher: ___________________ &nbsp; | &nbsp; Subject: ___________________ &nbsp; | &nbsp; Term: ___________________</p>' +
+    '<table style="border-collapse:collapse;width:100%;">' +
+    '<tr>' + headers.map(function (h) { return '<th style="border:1px solid #ccc;padding:6px;background:#e7f3ec;">' + h + '</th>'; }).join('') + '</tr>' +
+    rowsHtml + '</table>';
+  downloadWordDoc('JangAfrika_Syllabus_Template.doc', 'JangAfrika Syllabus Template', html);
+});
+</script>
+</body>
+</html>

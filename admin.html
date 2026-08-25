@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Dashboard — JangAfrika</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <img src="logo.png" onerror="this.style.display='none'">
+    <div><h1>JangAfrika</h1><small>Admin Dashboard</small></div>
+  </div>
+  <nav>
+    <span style="margin-right:16px;text-align:right;display:inline-block;">
+      <strong id="whoamiName">—</strong><br><small id="whoamiRole" style="opacity:.85;">—</small>
+    </span>
+    <a href="profile.html">My Profile</a>
+    <a href="#" onclick="logout()">Log out</a>
+  </nav>
+</header>
+
+<div class="container">
+  <div class="tabs no-print">
+    <button data-tab="approvals" class="active">Approvals</button>
+    <button data-tab="users">Users</button>
+    <button data-tab="subjects">Subjects &amp; Teachers</button>
+    <button data-tab="marks">Assessment Marks</button>
+    <button data-tab="payments">Payments</button>
+    <button data-tab="attendance">Attendance</button>
+    <button data-tab="templates">Templates</button>
+    <button data-tab="pastquestions">Past Questions</button>
+    <button data-tab="curriculum">Curriculum &amp; QA</button>
+    <button data-tab="settings">Settings</button>
+  </div>
+
+  <!-- APPROVALS -->
+  <div id="tab-approvals" class="tabpane">
+    <div class="card">
+      <h2>Pending registrations</h2>
+      <table>
+        <thead><tr><th>Name</th><th>Requested role</th><th>Email</th><th>Submitted</th><th>Actions</th></tr></thead>
+        <tbody id="pendingBody"><tr><td colspan="5" class="muted">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- USERS -->
+  <div id="tab-users" class="tabpane hidden">
+    <div class="card">
+      <h2>All users</h2>
+      <table>
+        <thead><tr><th>Name</th><th>Role</th><th>Email</th><th>Status</th><th>Payment</th><th>Actions</th></tr></thead>
+        <tbody id="usersBody"><tr><td colspan="6" class="muted">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SUBJECTS -->
+  <div id="tab-subjects" class="tabpane hidden">
+    <div class="card">
+      <h2>Add subject</h2>
+      <form id="subjectForm" class="grid cols-2">
+        <div><label>Subject name</label><input type="text" id="subjName" required></div>
+        <div style="align-self:end;"><button type="submit">Add subject</button></div>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Subjects</h2>
+      <table>
+        <thead><tr><th>Subject</th><th>Teachers</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="subjectsBody"><tr><td colspan="4" class="muted">Loading…</td></tr></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h2>Add topic to a subject</h2>
+      <form id="topicForm" class="grid cols-3">
+        <div><label>Subject</label><select id="topicSubject"></select></div>
+        <div><label>Topic name</label><input type="text" id="topicName" required></div>
+        <div style="align-self:end;"><button type="submit">Add topic</button></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MARKS -->
+  <div id="tab-marks" class="tabpane hidden">
+    <div class="card">
+      <h2>Upload assessment marks</h2>
+      <p class="muted">Assignments average is calculated automatically from graded submissions for the subject &amp; term. Enter Test and Exam as percentages (0–100) — overall score is the average of the three.</p>
+      <form id="marksForm" class="grid cols-3">
+        <div><label>Student</label><select id="markStudent"></select></div>
+        <div><label>Subject</label><select id="markSubject"></select></div>
+        <div><label>Term</label><input type="text" id="markTerm" placeholder="Term 1" required></div>
+        <div><label>Test (%)</label><input type="number" id="markTest" min="0" max="100"></div>
+        <div><label>Exam (%)</label><input type="number" id="markExam" min="0" max="100"></div>
+        <div style="align-self:end;"><button type="submit">Upload marks</button></div>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Uploaded marks</h2>
+      <table>
+        <thead><tr><th>Student</th><th>Subject</th><th>Term</th><th>Assignments</th><th>Test</th><th>Exam</th><th>Score</th><th>Grade</th></tr></thead>
+        <tbody id="marksBody"><tr><td colspan="8" class="muted">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- PAYMENTS -->
+  <div id="tab-payments" class="tabpane hidden">
+    <div class="card">
+      <h2>Record a payment</h2>
+      <form id="paymentForm" class="grid cols-3">
+        <div><label>Student</label><select id="paySt"></select></div>
+        <div><label>Amount (GMD)</label><input type="number" id="payAmount" required></div>
+        <div><label>Term</label><input type="text" id="payTerm"></div>
+        <div><label>Method</label><input type="text" id="payMethod" placeholder="Cash / Bank / Mobile Money"></div>
+        <div><label>Reference</label><input type="text" id="payRef"></div>
+        <div style="align-self:end;"><button type="submit">Record payment</button></div>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Payment history</h2>
+      <table>
+        <thead><tr><th>Student</th><th>Amount</th><th>Term</th><th>Date</th><th>Status</th><th>Tier after this payment</th><th>Actions</th></tr></thead>
+        <tbody id="paymentsBody"><tr><td colspan="7" class="muted">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ATTENDANCE -->
+  <div id="tab-attendance" class="tabpane hidden">
+    <div class="card">
+      <h2>Attendance records</h2>
+      <div class="grid cols-2">
+        <div><label>Filter by subject</label><select id="attFilterSubject"><option value="">All subjects</option></select></div>
+        <div><label>Filter by student</label><select id="attFilterStudent"><option value="">All students</option></select></div>
+      </div>
+      <table>
+        <thead><tr><th>Date</th><th>Student</th><th>Subject</th><th>Status</th><th>Marked by</th></tr></thead>
+        <tbody id="attendanceBody"><tr><td colspan="5" class="muted">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TEMPLATES -->
+  <div id="tab-templates" class="tabpane hidden">
+    <div class="card">
+      <h2>Create a subject-specific template</h2>
+      <p class="muted">Upload a CSV or Word (.doc/.docx) file — teachers will see and download it from their dashboard for that subject.</p>
+      <form id="templateForm" class="grid cols-2">
+        <div><label>Type</label>
+          <select id="tplType"><option value="Syllabus">Syllabus</option><option value="LessonPlan">Lesson Report</option></select>
+        </div>
+        <div><label>Subject</label><select id="tplSubject"></select></div>
+        <div><label>Title</label><input type="text" id="tplTitle" required></div>
+        <div><label>File (.csv, .doc, .docx)</label><input type="file" id="tplFile" accept=".csv,.doc,.docx" required></div>
+        <div><button type="submit">Create template</button></div>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Existing templates</h2>
+      <table>
+        <thead><tr><th>Type</th><th>Subject</th><th>Title</th><th>File</th><th>Uploaded</th><th></th></tr></thead>
+        <tbody id="templatesBody"><tr><td colspan="6" class="muted">Loading…</td></tr></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h2>Generic starter templates</h2>
+      <p class="muted">Blank fill-in-the-blank starting points, editable in Excel/Word, in case you'd rather build a subject template quickly from these.</p>
+      <a class="btn secondary" href="syllabus-template.html" target="_blank">Open Syllabus starter</a>
+      <a class="btn secondary" href="lesson-plan-template.html" target="_blank">Open Lesson Report starter</a>
+    </div>
+  </div>
+
+  <!-- PAST QUESTIONS -->
+  <div id="tab-pastquestions" class="tabpane hidden">
+    <div class="card">
+      <h2>Upload a past question paper</h2>
+      <p class="muted">For <strong>Objective</strong> papers, upload a .docx where each question starts with "1.", "2." etc,
+        each option starts with "A)", "B)", "C)", "D)", and you've <strong>bolded the text of the correct option</strong> —
+        the system reads the file and automatically builds a self-graded test from it. <strong>Theory</strong> papers are
+        stored as download-only (no auto-grading).</p>
+      <form id="pastPaperForm" class="grid cols-2">
+        <div><label>Subject</label><select id="ppSubject"></select></div>
+        <div><label>Paper type</label>
+          <select id="ppType"><option value="Objective">Objective</option><option value="Theory">Theory</option></select>
+        </div>
+        <div><label>Year</label><input type="number" id="ppYear" placeholder="2024" required></div>
+        <div><label>Exam sitting</label>
+          <select id="ppSitting"><option value="June">June</option><option value="November">November</option><option value="February">February</option></select>
+        </div>
+        <div><label>Title</label><input type="text" id="ppTitle" required placeholder="e.g. Mathematics Objective 2024"></div>
+        <div><label>File (.docx)</label><input type="file" id="ppFile" accept=".docx" required></div>
+        <div><button type="submit">Upload paper</button></div>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Uploaded papers</h2>
+      <table>
+        <thead><tr><th>Subject</th><th>Type</th><th>Year</th><th>Sitting</th><th>Title</th><th>Parse notes</th><th></th></tr></thead>
+        <tbody id="pastPapersBody"><tr><td colspan="7" class="muted">Loading…</td></tr></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h2>Student performance on assigned past papers</h2>
+      <p class="muted">Every past paper a teacher has assigned to a student, with their latest score and a plain recommendation.</p>
+      <label>Filter by subject</label><select id="ppOverviewSubject"><option value="">All subjects</option></select>
+      <table>
+        <thead><tr><th>Student</th><th>Class teacher</th><th>Subject</th><th>Paper</th><th>Assigned</th><th>Score</th><th>Recommendation</th></tr></thead>
+        <tbody id="ppOverviewBody"><tr><td colspan="7" class="muted">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- CURRICULUM & QUALITY ASSURANCE -->
+  <div id="tab-curriculum" class="tabpane hidden">
+    <div class="card">
+      <h2>Curriculum progress overview</h2>
+      <label>Filter by subject</label><select id="curFilterSubject"><option value="">All subjects</option></select>
+      <table>
+        <thead><tr><th>Subject</th><th>Topic</th><th>Status</th><th>Started by</th><th>Date started</th><th>Sub-topics</th><th>Date completed</th></tr></thead>
+        <tbody id="curOverviewBody"><tr><td colspan="7" class="muted">Loading…</td></tr></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h2>Lesson plan review queue</h2>
+      <label>Filter</label>
+      <select id="lpReviewFilter">
+        <option value="Pending">Pending</option>
+        <option value="Approved">Approved</option>
+        <option value="Rejected">Rejected</option>
+        <option value="">All</option>
+      </select>
+      <table>
+        <thead><tr><th>Title</th><th>Subject</th><th>Sub-topic</th><th>Teacher</th><th>Submitted</th><th>File</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="lpReviewBody"><tr><td colspan="8" class="muted">Loading…</td></tr></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h2>Lesson report review queue</h2>
+      <p class="muted">A sub-topic can't be marked Complete without an approved-or-pending report here — this is the one that actually enforces the Curriculum &amp; QA requirement.</p>
+      <label>Filter</label>
+      <select id="lrReviewFilter">
+        <option value="Pending">Pending</option>
+        <option value="Approved">Approved</option>
+        <option value="Rejected">Rejected</option>
+        <option value="">All</option>
+      </select>
+      <table>
+        <thead><tr><th>Title</th><th>Topic</th><th>Sub-topic</th><th>Teacher</th><th>Submitted</th><th>File</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="lrReviewBody"><tr><td colspan="8" class="muted">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div id="tab-settings" class="tabpane hidden">
+    <div class="card">
+      <h2>Tuition fee</h2>
+      <p class="muted">Sets the term fee every student's payment percentage is measured against. Payment tiers:
+        <strong>Unpaid</strong> (&lt;50%) — no registration, no marks.
+        <strong>Partial</strong> (≥50%) — can register subjects/topics, marks still locked.
+        <strong>Paid</strong> (100%) — full access.</p>
+      <form id="feeForm" class="grid cols-2">
+        <div><label>Tuition fee amount (GMD)</label><input type="number" id="feeAmount" min="0"></div>
+        <div style="align-self:end;"><button type="submit">Save fee amount</button></div>
+      </form>
+    </div>
+    <div class="card">
+      <h2>AI Study Helper (Gemini API key)</h2>
+      <p class="muted">Get a free key from <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a>.</p>
+      <form id="geminiForm" class="grid cols-2">
+        <div><label>Gemini API key</label><input type="text" id="geminiKey"></div>
+        <div style="align-self:end;"><button type="submit">Save key</button></div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<footer class="sitefooter">
+  JangAfrika · Est. 2025, Gunjur · info.jangafrica@gmail.com · (+220) 2630798/5944287<br>
+  Powered by JangAfrika
+</footer>
+
+<script src="config.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>

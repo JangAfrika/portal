@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Lesson Report Template — JangAfrika</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <img src="logo.png" onerror="this.style.display='none'">
+    <div><h1>JangAfrika</h1><small>Lesson Report Template</small></div>
+  </div>
+  <nav class="no-print"><a href="javascript:history.back()">← Back</a></nav>
+</header>
+
+<div class="container">
+  <div class="card">
+    <h2>Generic starter lesson report template</h2>
+    <p class="muted">A blank, editable starting point for a post-lesson report — fill it in after you've taught the lesson. Download it, fill it in, then upload the completed file from your Staff Dashboard's Lesson Report tab. If your admin has already created a template specific to your subject, use that instead — it'll show on your Staff Dashboard's Lesson Report tab too.</p>
+    <button id="downloadCsvBtn">⬇️ Download as CSV (editable in Excel/Sheets)</button>
+    <button id="downloadDocBtn" class="secondary" style="margin-left:8px;">⬇️ Download as Word document</button>
+  </div>
+</div>
+
+<footer class="sitefooter">
+  JangAfrika · Est. 2025, Gunjur · info.jangafrica@gmail.com · (+220) 2630798/5944287<br>
+  Powered by JangAfrika
+</footer>
+
+<script src="config.js"></script>
+<script>
+const fields = [
+  ['Teacher', ''], ['Subject', ''], ['Topic', ''], ['Sub-topic', ''], ['Date taught', ''], ['Class / Level', ''],
+  ['What was taught', ''], ['Resources used', ''],
+  ['Feedback — how the lesson went', ''], ['Challenges encountered', ''],
+  ['Student understanding / assessment observed', ''], ['Next steps / follow-up needed', '']
+];
+
+document.getElementById('downloadCsvBtn').addEventListener('click', function () {
+  downloadCSV('JangAfrika_LessonPlan_Template.csv', [['Field', 'Your Content']].concat(fields));
+});
+
+document.getElementById('downloadDocBtn').addEventListener('click', function () {
+  let rowsHtml = fields.map(function (f) {
+    return '<tr><td style="border:1px solid #ccc;padding:6px;font-weight:bold;width:220px;">' + f[0] + '</td>' +
+      '<td style="border:1px solid #ccc;padding:6px;">&nbsp;</td></tr>';
+  }).join('');
+  const html = '<h2>JangAfrika — Lesson Report Template</h2>' +
+    '<table style="border-collapse:collapse;width:100%;">' + rowsHtml + '</table>';
+  downloadWordDoc('JangAfrika_LessonReport_Template.doc', 'JangAfrika Lesson Report Template', html);
+});
+</script>
+</body>
+</html>

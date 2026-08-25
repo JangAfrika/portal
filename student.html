@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Student Dashboard — JangAfrika</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <img src="logo.png" onerror="this.style.display='none'">
+    <div><h1>JangAfrika</h1><small>Student Dashboard</small></div>
+  </div>
+  <nav>
+    <span style="margin-right:16px;text-align:right;display:inline-block;">
+      <strong id="whoamiName">—</strong><br><small id="whoamiRole" style="opacity:.85;">—</small>
+    </span>
+    <a href="profile.html">My Profile</a>
+    <a href="#" onclick="logout()">Log out</a>
+  </nav>
+</header>
+
+<div class="container">
+  <div class="card" id="paymentBanner"></div>
+
+  <div class="tabs no-print">
+    <button data-tab="summary" class="active">My Summary</button>
+    <button data-tab="materials">Materials</button>
+    <button data-tab="assignments">Assignments</button>
+    <button data-tab="topics">Subjects / Topics</button>
+    <button data-tab="tasks">Tasks / Quizzes</button>
+    <button data-tab="marks">My Marks</button>
+    <button data-tab="attendance">My Attendance</button>
+    <button data-tab="ai">AI Study Helper</button>
+  </div>
+
+  <!-- SUMMARY -->
+  <div id="tab-summary" class="tabpane">
+    <div class="card">
+      <h2>Overall performance summary</h2>
+      <div id="summaryContent"></div>
+    </div>
+  </div>
+
+  <div id="tab-materials" class="tabpane hidden">
+    <div class="card">
+      <h2>Learning materials</h2>
+      <label>Subject</label><select id="matSubjectFilter"></select>
+      <table>
+        <thead><tr><th>Title</th><th>Description</th><th>File</th><th>Uploaded</th></tr></thead>
+        <tbody id="materialsBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="tab-assignments" class="tabpane hidden">
+    <div class="card">
+      <h2>Assignments</h2>
+      <label>Subject</label><select id="asgSubjectFilter"></select>
+      <table>
+        <thead><tr><th>Title</th><th>Due</th><th>File</th><th>Submit</th><th>Status</th><th>Feedback</th></tr></thead>
+        <tbody id="assignmentsBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="tab-topics" class="tabpane hidden">
+    <div class="card">
+      <h2>Register for a subject (class)</h2>
+      <p class="muted">Registration needs at least 50% of fees paid.</p>
+      <label>Subject</label><select id="regSubjectClass"></select>
+      <button id="regSubjectBtn">Register for this subject</button>
+    </div>
+    <div class="card">
+      <h2>My registered subjects</h2>
+      <table>
+        <thead><tr><th>Subject</th><th>Registered</th><th>Status</th></tr></thead>
+        <tbody id="mySubjectsBody"></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h2>Register for a specific topic</h2>
+      <p class="muted">e.g. register to learn just "Geometry" inside Mathematics. Needs at least 50% of fees paid.</p>
+      <label>Subject</label><select id="regSubject"></select>
+      <label>Topic</label><select id="regTopic"></select>
+      <button id="regBtn">Register</button>
+    </div>
+    <div class="card">
+      <h2>My registered topics</h2>
+      <table>
+        <thead><tr><th>Subject</th><th>Topic</th><th>Registered</th><th>Status</th></tr></thead>
+        <tbody id="myTopicsBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="tab-tasks" class="tabpane hidden">
+    <div class="card">
+      <h2>My results</h2>
+      <table>
+        <thead><tr><th>Task</th><th>Score</th><th>%</th><th>Result</th><th>Recommendation</th><th>Date</th></tr></thead>
+        <tbody id="myResultsBody"></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h2>📌 Assigned by your teacher</h2>
+      <p class="muted">Click a task to open it and start working — right here, no extra pages.</p>
+      <div id="assignedTaskTiles" class="grid cols-3"></div>
+      <div id="assignedTaskQuizArea" class="hidden" style="margin-top:16px;"></div>
+    </div>
+    <div class="card">
+      <h2>Available tasks</h2>
+      <p class="muted">Click a task to open it and start working.</p>
+      <div id="tasksContainer" class="grid cols-3"></div>
+      <div id="taskQuizArea" class="hidden" style="margin-top:16px;"></div>
+    </div>
+  </div>
+
+  <div id="tab-marks" class="tabpane hidden">
+    <div class="card">
+      <h2>My assessment marks</h2>
+      <table>
+        <thead><tr><th>Subject</th><th>Term</th><th>Assignments</th><th>Test</th><th>Exam</th><th>Score</th><th>Grade</th></tr></thead>
+        <tbody id="marksBody"></tbody>
+      </table>
+      <button class="secondary no-print" onclick="window.print()" style="margin-top:10px;">🖨️ Print my marks</button>
+    </div>
+  </div>
+
+  <div id="tab-attendance" class="tabpane hidden">
+    <div class="card">
+      <h2>My attendance</h2>
+      <table>
+        <thead><tr><th>Date</th><th>Subject</th><th>Status</th></tr></thead>
+        <tbody id="attendanceBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="tab-ai" class="tabpane hidden">
+    <div class="card">
+      <h2>🤖 AI Study Helper</h2>
+      <p class="muted">Ask for study notes, practice questions, or an explanation on any Maths or French topic.</p>
+      <label>What would you like to study?</label>
+      <textarea id="aiPrompt" placeholder="e.g. Explain quadratic equations with 3 practice questions"></textarea>
+      <button id="aiBtn">Generate</button>
+      <div id="aiResult" class="card hidden" style="background:#f7faf8;margin-top:14px;white-space:pre-wrap;"></div>
+    </div>
+  </div>
+</div>
+
+<footer class="sitefooter">
+  JangAfrika · Est. 2025, Gunjur · info.jangafrica@gmail.com · (+220) 2630798/5944287<br>
+  Powered by JangAfrika
+</footer>
+
+<script src="config.js"></script>
+<script src="student.js"></script>
+</body>
+</html>

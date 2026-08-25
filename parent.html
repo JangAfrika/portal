@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Parent Dashboard — JangAfrika</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <img src="logo.png" onerror="this.style.display='none'">
+    <div><h1>JangAfrika</h1><small>Parent Dashboard</small></div>
+  </div>
+  <nav>
+    <span style="margin-right:16px;text-align:right;display:inline-block;">
+      <strong id="whoamiName">—</strong><br><small id="whoamiRole" style="opacity:.85;">—</small>
+    </span>
+    <a href="profile.html">My Profile</a>
+    <a href="#" onclick="logout()">Log out</a>
+  </nav>
+</header>
+
+<div class="container">
+  <div class="card">
+    <h2>Your child</h2>
+    <label>Select child</label>
+    <select id="childSelect"></select>
+  </div>
+
+  <div id="childData" class="hidden">
+    <div class="card" style="display:flex;gap:20px;align-items:center;flex-wrap:wrap;">
+      <img id="childPhoto" class="profile-photo" src="">
+      <div>
+        <h2 id="childName" style="margin:0;">—</h2>
+        <div class="muted">ID: <span id="childId"></span></div>
+        <span class="badge" id="childPayBadge"></span>
+        <div id="childBalanceInfo" class="muted" style="margin-top:6px;"></div>
+      </div>
+      <button class="accent no-print" onclick="window.print()" style="margin-left:auto;">🖨️ Print report</button>
+    </div>
+
+    <div class="card">
+      <h3>Assessment marks</h3>
+      <table>
+        <thead><tr><th>Subject</th><th>Term</th><th>Assignments</th><th>Test</th><th>Exam</th><th>Score</th><th>Grade</th></tr></thead>
+        <tbody id="marksBody"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>Topic mastery results</h3>
+      <table>
+        <thead><tr><th>Score</th><th>%</th><th>Result</th><th>Recommendation</th><th>Date</th></tr></thead>
+        <tbody id="taskResultsBody"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>Registered subjects</h3>
+      <table>
+        <thead><tr><th>Subject</th><th>Registered</th><th>Status</th></tr></thead>
+        <tbody id="subjectsBody"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>Registered topics</h3>
+      <table>
+        <thead><tr><th>Subject</th><th>Topic</th><th>Registered</th><th>Status</th></tr></thead>
+        <tbody id="topicsBody"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>Attendance</h3>
+      <table>
+        <thead><tr><th>Date</th><th>Subject</th><th>Status</th></tr></thead>
+        <tbody id="attendanceBody"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>Payment history</h3>
+      <table>
+        <thead><tr><th>Amount</th><th>Term</th><th>Date</th><th>Status</th></tr></thead>
+        <tbody id="paymentsBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<footer class="sitefooter">
+  JangAfrika · Est. 2025, Gunjur · info.jangafrica@gmail.com · (+220) 2630798/5944287<br>
+  Powered by JangAfrika
+</footer>
+
+<script src="config.js"></script>
+<script src="parent.js"></script>
+</body>
+</html>
