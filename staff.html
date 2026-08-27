@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Staff</title>
+<title>Staff Dashboard — JangAfrika</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -31,27 +31,31 @@
     <button data-tab="lessonplans">Lesson Plan</button>
     <button data-tab="syllabus">Syllabus</button>
     <button data-tab="curriculum">Curriculum &amp; QA</button>
-    <button data-tab="pastquestions">Past Questions</button>
+    <button data-tab="pastquestions">Topic Tests</button>
   </div>
 
   <!-- ATTENDANCE -->
   <div id="tab-attendance" class="tabpane">
     <div class="card">
       <h2>Mark attendance</h2>
-      <label>Subject</label><select id="attSubject"></select>
-      <label>Date</label><input type="date" id="attDate">
-      <table id="attTable">
-        <thead><tr><th>Student</th><th>Status</th></tr></thead>
-        <tbody></tbody>
-      </table>
-      <button id="attSubmit" style="margin-top:12px;">Save attendance</button>
+      <button id="markAttendanceBtn">📋 Mark Attendance</button>
+      <div id="markAttendanceDetail" class="hidden" style="margin-top:14px;">
+        <label>Subject</label><select id="attSubject"></select>
+        <label>Date</label><input type="date" id="attDate">
+        <table id="attTable">
+          <thead><tr><th>Student</th><th>Status</th><th>Comment / reason (for absent or late)</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <button id="attSubmit" style="margin-top:12px;">Save attendance</button>
+        <button id="attCancel" class="secondary" style="margin-top:12px;margin-left:8px;">Cancel</button>
+      </div>
     </div>
     <div class="card">
       <h2>Attendance history</h2>
       <label>Filter by subject</label><select id="attHistorySubject"></select>
       <table>
-        <thead><tr><th>Date</th><th>Student</th><th>Subject</th><th>Status</th></tr></thead>
-        <tbody id="attHistoryBody"><tr><td colspan="4" class="muted">Loading…</td></tr></tbody>
+        <thead><tr><th>Date</th><th>Student</th><th>Subject</th><th>Status</th><th>Comment / reason</th></tr></thead>
+        <tbody id="attHistoryBody"><tr><td colspan="5" class="muted">Loading…</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -193,8 +197,9 @@
   <div id="tab-curriculum" class="tabpane hidden">
     <div class="card">
       <h2>Topic progress</h2>
-      <p class="muted">Every sub-topic needs a lesson report submitted below (in that sub-topic's row, or via the form at the bottom of its topic) before it can be marked Complete.</p>
+      <p class="muted">Every sub-topic needs a lesson report submitted before it can be marked Complete.</p>
       <label>Subject</label><select id="curSubject"></select>
+      <label>Topic</label><select id="curTopic"><option value="">— Choose a topic —</option></select>
       <div id="curTopicsContainer"></div>
     </div>
     <div class="card">
@@ -210,17 +215,47 @@
   <!-- PAST QUESTIONS -->
   <div id="tab-pastquestions" class="tabpane hidden">
     <div class="card">
-      <h2>Assign a past paper to students</h2>
-      <p class="muted">Only papers for subjects you teach show here. Assigning an Objective paper lets you track each student's score; assigning a Theory paper just flags it as something they should download and review.</p>
+      <h2>Submit a topic test</h2>
+      <p class="muted">For <strong>Objective</strong> tests, upload a .docx where each question starts with "1.", "2." etc, each option starts with "A)", "B)", "C)", "D)", and you've <strong>bolded the text of the correct option</strong> — the system reads the file and automatically builds a self-graded test from it. <strong>Theory</strong> tests are stored as download-only (no auto-grading).</p>
+      <form id="topicTestForm" class="grid cols-3">
+        <div><label>Subject</label><select id="ttSubject"></select></div>
+        <div><label>Topic</label><select id="ttTopic"></select></div>
+        <div><label>Test type</label>
+          <select id="ttType"><option value="Objective">Objective</option><option value="Theory">Theory</option></select>
+        </div>
+        <div><label>Title</label><input type="text" id="ttTitle" required></div>
+        <div><label>File (.docx)</label><input type="file" id="ttFile" accept=".docx" required></div>
+        <div style="align-self:end;"><button type="submit">Submit topic test</button></div>
+      </form>
+    </div>
+
+    <div class="card hidden" id="ttAssignCard">
+      <h2>Assign this test to students</h2>
+      <p class="muted">Submitted — now pick who should take it.</p>
+      <div id="ttStudentPicker" style="margin-top:10px;"></div>
+      <button id="ttAssignBtn" style="margin-top:10px;">Assign to selected students</button>
+    </div>
+
+    <div class="card">
+      <h2>My topic tests</h2>
+      <table>
+        <thead><tr><th>Subject</th><th>Topic</th><th>Type</th><th>Title</th><th>File</th><th></th></tr></thead>
+        <tbody id="ttListBody"><tr><td colspan="6" class="muted">Loading…</td></tr></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>Assign an existing test to students</h2>
+      <p class="muted">Only tests for subjects you teach show here.</p>
       <label>Subject</label><select id="ppSubject"></select>
-      <label>Paper</label><select id="ppPaper"></select>
+      <label>Test</label><select id="ppPaper"></select>
       <div id="ppStudentPicker" style="margin-top:10px;"></div>
       <button id="ppAssignBtn" style="margin-top:10px;">Assign to selected students</button>
     </div>
     <div class="card">
       <h2>My assignments</h2>
       <table>
-        <thead><tr><th>Paper</th><th>Subject</th><th>Student</th><th>Assigned</th><th>Score</th></tr></thead>
+        <thead><tr><th>Test</th><th>Subject</th><th>Student</th><th>Assigned</th><th>Score</th></tr></thead>
         <tbody id="ppAssignmentsBody"><tr><td colspan="5" class="muted">Loading…</td></tr></tbody>
       </table>
     </div>
