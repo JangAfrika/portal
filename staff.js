@@ -41,7 +41,6 @@ async function init() {
   // These six don't depend on each other, so load them together instead of
   // one at a time — much faster than a strictly serial chain of API calls.
   await Promise.all([
-    safeCall(loadAttendanceRoster, 'attendance roster'),
     safeCall(loadAttendanceHistory, 'attendance history'),
     safeCall(loadAssignmentsForGrading, 'assignments'),
     safeCall(loadLessonPlans, 'lesson reports'),
@@ -55,6 +54,7 @@ async function init() {
   ['attSubject'].forEach(function (id) { document.getElementById(id).addEventListener('change', loadAttendanceRoster); });
   document.getElementById('attHistorySubject').addEventListener('change', loadAttendanceHistory);
   document.getElementById('curSubject').addEventListener('change', renderCurriculum);
+  document.getElementById('curTopic').addEventListener('change', renderSelectedTopic);
   document.getElementById('matSubject').addEventListener('change', function () { fillTopicSelect('matTopic', this.value); });
   document.getElementById('asgSubject').addEventListener('change', function () { fillTopicSelect('asgTopic', this.value); });
   document.getElementById('taskSubject').addEventListener('change', function () { fillTopicSelect('taskTopic', this.value); });
@@ -84,24 +84,39 @@ async function fillSubtopicSelect(id, topicId) {
 // ---- Attendance -------------------------------------------------------------
 // Roster is limited to students actually registered (subject- or topic-level)
 // to the selected subject, so teachers only mark students in their class.
+guardClick(document.getElementById('markAttendanceBtn'), async function () {
+  document.getElementById('markAttendanceDetail').classList.remove('hidden');
+  await loadAttendanceRoster();
+});
+document.getElementById('attCancel').addEventListener('click', function () {
+  document.getElementById('markAttendanceDetail').classList.add('hidden');
+});
+
 async function loadAttendanceRoster() {
   const tbody = document.querySelector('#attTable tbody');
   const subjectId = document.getElementById('attSubject').value;
-  tbody.innerHTML = '<tr><td colspan="2" class="muted">Loading roster…</td></tr>';
-  if (!subjectId) { tbody.innerHTML = '<tr><td colspan="2" class="muted">Choose a subject</td></tr>'; return; }
+  tbody.innerHTML = '<tr><td colspan="3" class="muted">Loading roster…</td></tr>';
+  if (!subjectId) { tbody.innerHTML = '<tr><td colspan="3" class="muted">Choose a subject</td></tr>'; return; }
   const roster = await api('listRegisteredStudents', { subjectId: subjectId }).catch(function () { return []; });
   tbody.innerHTML = '';
   if (!roster.length) {
-    tbody.innerHTML = '<tr><td colspan="2" class="muted">No students registered to this subject/topic yet.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="3" class="muted">No students registered to this subject/topic yet.</td></tr>';
     return;
   }
   roster.forEach(function (s) {
     const tr = document.createElement('tr');
-    tr.innerHTML = '<td>' + s.FullName + '</td><td></td>';
+    tr.innerHTML = '<td>' + s.FullName + '</td><td></td><td></td>';
     const sel = document.createElement('select');
     sel.innerHTML = '<option>Present</option><option>Absent</option><option>Late</option>';
     sel.dataset.studentId = s.UserID;
-    tr.lastElementChild.appendChild(sel);
+    tr.children[1].appendChild(sel);
+    const commentInput = document.createElement('input');
+    commentInput.type = 'text';
+    commentInput.placeholder = 'e.g. sick, travelling, traffic…';
+    commentInput.dataset.studentId = s.UserID;
+    commentInput.disabled = true; // only relevant once status isn't Present
+    sel.addEventListener('change', function () { commentInput.disabled = (sel.value === 'Present'); if (sel.value === 'Present') commentInput.value = ''; });
+    tr.children[2].appendChild(commentInput);
     tbody.appendChild(tr);
   });
 }
@@ -110,28 +125,31 @@ guardClick(document.getElementById('attSubmit'), async function () {
   const date = document.getElementById('attDate').value;
   if (!subjectId) { toast('Choose a subject', true); return; }
   const records = Array.from(document.querySelectorAll('#attTable select')).map(function (sel) {
-    return { studentId: sel.dataset.studentId, subjectId: subjectId, status: sel.value, date: date };
+    const comment = document.querySelector('#attTable input[data-student-id="' + sel.dataset.studentId + '"]');
+    return { studentId: sel.dataset.studentId, subjectId: subjectId, status: sel.value, date: date, comment: comment ? comment.value.trim() : '' };
   });
   if (!records.length) { toast('No students to mark', true); return; }
   await api('markAttendance', { records: JSON.stringify(records) });
   toast('Attendance saved');
+  document.getElementById('markAttendanceDetail').classList.add('hidden');
   await loadAttendanceHistory();
 });
 
 async function loadAttendanceHistory() {
   const subjectId = document.getElementById('attHistorySubject').value;
   const body = document.getElementById('attHistoryBody');
-  body.innerHTML = '<tr><td colspan="4" class="muted">Loading…</td></tr>';
+  body.innerHTML = '<tr><td colspan="5" class="muted">Loading…</td></tr>';
   const subjectIds = subjectId ? [subjectId] : mySubjects.map(function (s) { return s.SubjectID; });
   const perSubject = await Promise.all(subjectIds.map(function (id) { return api('listAttendance', { subjectId: id }); }));
   const rows = [].concat.apply([], perSubject);
-  body.innerHTML = rows.length ? '' : '<tr><td colspan="4" class="muted">No attendance recorded yet</td></tr>';
+  body.innerHTML = rows.length ? '' : '<tr><td colspan="5" class="muted">No attendance recorded yet</td></tr>';
   rows.slice().reverse().forEach(function (r) {
     const student = myRoster.find(function (s) { return s.UserID === r.StudentID; });
     const subj = mySubjects.find(function (s) { return s.SubjectID === r.SubjectID; });
     const tr = document.createElement('tr');
     tr.innerHTML = '<td>' + fmtDate(r.AttendanceDate) + '</td><td>' + (student ? student.FullName : r.StudentID) + '</td>' +
-      '<td>' + (subj ? subj.SubjectName : r.SubjectID) + '</td><td>' + r.Status + '</td>';
+      '<td>' + (subj ? subj.SubjectName : r.SubjectID) + '</td><td>' + r.Status + '</td>' +
+      '<td class="muted">' + (r.Comment || '—') + '</td>';
     body.appendChild(tr);
   });
 }
@@ -346,29 +364,48 @@ guardSubmit(document.getElementById('sylForm'), async function () {
 });
 
 // ---- Curriculum & Quality Assurance ---------------------------------------------
+let curTopicsCache = [];
+
 async function renderCurriculum() {
   const subjectId = document.getElementById('curSubject').value;
+  const topicSelect = document.getElementById('curTopic');
   const container = document.getElementById('curTopicsContainer');
-  if (!subjectId) { container.innerHTML = '<p class="muted">Choose a subject.</p>'; return; }
+  if (!subjectId) {
+    topicSelect.innerHTML = '<option value="">— Choose a topic —</option>';
+    container.innerHTML = '<p class="muted">Choose a subject.</p>';
+    return;
+  }
+
+  curTopicsCache = await api('listTopics', { subjectId: subjectId });
+  if (!curTopicsCache.length) {
+    topicSelect.innerHTML = '<option value="">— Choose a topic —</option>';
+    container.innerHTML = '<p class="muted">No topics yet for this subject. Add one from the Subjects tab (admin) first.</p>';
+    return;
+  }
+
+  const selected = topicSelect.value;
+  topicSelect.innerHTML = curTopicsCache.map(function (t) {
+    return '<option value="' + t.TopicID + '">' + t.TopicName + ' — ' + progressBadge(t.ProgressStatus || 'NotStarted').label + '</option>';
+  }).join('');
+  // Keep the same topic selected across a refresh if it still exists, else default to the first one.
+  if (selected && curTopicsCache.some(function (t) { return t.TopicID === selected; })) topicSelect.value = selected;
+  await renderSelectedTopic();
+}
+
+async function renderSelectedTopic() {
+  const topicId = document.getElementById('curTopic').value;
+  const container = document.getElementById('curTopicsContainer');
+  if (!topicId) { container.innerHTML = '<p class="muted">Choose a topic above to see its sub-topics.</p>'; return; }
+  const topic = curTopicsCache.find(function (t) { return t.TopicID === topicId; });
+  if (!topic) return;
+
   container.innerHTML = '<p class="muted">Loading…</p>';
-
-  const topics = await api('listTopics', { subjectId: subjectId });
-  if (!topics.length) { container.innerHTML = '<p class="muted">No topics yet for this subject. Add one from the Subjects tab (admin) first.</p>'; return; }
-
-  const subtopicsByTopic = {}, lessonReportsByTopic = {};
-  await Promise.all(topics.map(async function (t) {
-    const [subs, reports] = await Promise.all([
-      api('listSubtopics', { topicId: t.TopicID }),
-      api('listLessonReports', { topicId: t.TopicID })
-    ]);
-    subtopicsByTopic[t.TopicID] = subs;
-    lessonReportsByTopic[t.TopicID] = reports;
-  }));
-
+  const [subtopics, lessonReports] = await Promise.all([
+    api('listSubtopics', { topicId: topicId }),
+    api('listLessonReports', { topicId: topicId })
+  ]);
   container.innerHTML = '';
-  topics.forEach(function (topic) {
-    container.appendChild(renderTopicCard(topic, subtopicsByTopic[topic.TopicID] || [], lessonReportsByTopic[topic.TopicID] || []));
-  });
+  container.appendChild(renderTopicCard(topic, subtopics, lessonReports));
 }
 
 function progressBadge(status) {
@@ -390,6 +427,20 @@ function renderTopicCard(topic, subtopics, lessonReports) {
     '<h3 style="margin:0;">' + topic.TopicName + '</h3>' +
     '<span class="badge ' + badge.cls + '">' + badge.label + '</span></div>';
 
+  const testBtn = document.createElement('button');
+  testBtn.className = 'accent';
+  testBtn.style.marginTop = '8px';
+  testBtn.textContent = '📝 Submit topic test';
+  testBtn.type = 'button';
+  testBtn.onclick = function () {
+    document.querySelector('.tabs button[data-tab="pastquestions"]').click();
+    document.getElementById('ttSubject').value = topic.SubjectID;
+    loadTopicsForTest().then(function () {
+      document.getElementById('ttTopic').value = topic.TopicID;
+    });
+  };
+  card.appendChild(testBtn);
+
   if (status === 'NotStarted') {
     const startBtn = document.createElement('button');
     startBtn.textContent = 'Start Topic';
@@ -397,12 +448,7 @@ function renderTopicCard(topic, subtopics, lessonReports) {
       await api('startTopic', { topicId: topic.TopicID });
       toast('Topic started'); await renderCurriculum();
     });
-    const hint = document.createElement('p');
-    hint.className = 'muted';
-    hint.style.marginTop = '4px';
-    hint.textContent = 'Or just add a sub-topic below — that starts the topic automatically.';
     card.appendChild(startBtn);
-    card.appendChild(hint);
   }
 
   // Build the "Submit lesson report" form first (not yet attached to the
@@ -468,28 +514,30 @@ function renderTopicCard(topic, subtopics, lessonReports) {
     else reportTd.innerHTML = '<span class="badge fail">Required</span>';
 
     if (st.Status !== 'Completed') {
-      if (!hasAnyReport) {
-        const uploadLink = document.createElement('button');
-        uploadLink.className = 'secondary';
-        uploadLink.textContent = 'Submit lesson report';
-        uploadLink.type = 'button';
-        uploadLink.onclick = function () {
-          reportSubtopicSelect.value = st.SubtopicID;
-          reportForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          reportTitleInput.focus();
-        };
-        actionTd.appendChild(uploadLink);
-      } else {
-        const completeBtn = document.createElement('button');
-        completeBtn.textContent = 'Mark Complete';
-        guardClick(completeBtn, async function () {
-          try {
-            await api('setSubtopicStatus', { subtopicId: st.SubtopicID, status: 'Completed' });
-            toast('Sub-topic completed'); await renderCurriculum();
-          } catch (err) { toast(err.message, true); }
-        });
-        actionTd.appendChild(completeBtn);
-      }
+      // Every sub-topic always gets a "Submit lesson report" button — a
+      // teacher may need to file more than one report for the same
+      // sub-topic across several lessons, so this isn't hidden once one
+      // exists. "Mark Complete" is shown alongside it; the backend enforces
+      // that at least one report exists before it will actually complete.
+      const reportBtn = document.createElement('button');
+      reportBtn.className = 'secondary';
+      reportBtn.textContent = 'Submit lesson report';
+      reportBtn.type = 'button';
+      reportBtn.onclick = function () {
+        reportSubtopicSelect.value = st.SubtopicID;
+        reportForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        reportTitleInput.focus();
+      };
+      actionTd.appendChild(reportBtn);
+
+      const completeBtn = document.createElement('button');
+      completeBtn.style.marginLeft = '6px';
+      completeBtn.textContent = 'Mark Complete';
+      guardClick(completeBtn, async function () {
+        await api('setSubtopicStatus', { subtopicId: st.SubtopicID, status: 'Completed' });
+        toast('Sub-topic completed'); await renderCurriculum();
+      });
+      actionTd.appendChild(completeBtn);
     }
     tbody.appendChild(tr);
   });
@@ -548,8 +596,8 @@ async function loadLessonReportReviewStatus() {
   });
 }
 
-// ---- Past Questions: teacher assigns papers to students -------------------------
-let ppPapers = [], ppRosterStudents = [];
+// ---- Topic Tests: teacher creates and assigns tests to students -----------------
+let ppPapers = [], ppRosterStudents = [], ttTopicsCache = [], ttPendingPaper = null, ttRosterStudents = [];
 
 async function initPastQuestionsAssign() {
   const subjOpts = mySubjects.map(function (s) { return '<option value="' + s.SubjectID + '">' + s.SubjectName + '</option>'; }).join('');
@@ -559,6 +607,92 @@ async function initPastQuestionsAssign() {
   guardClick(document.getElementById('ppAssignBtn'), submitAssignment_);
   await loadPastQuestionsForSubject();
   await loadMyAssignments();
+
+  document.getElementById('ttSubject').innerHTML = subjOpts;
+  document.getElementById('ttSubject').addEventListener('change', loadTopicsForTest);
+  guardSubmit(document.getElementById('topicTestForm'), submitTopicTest_);
+  guardClick(document.getElementById('ttAssignBtn'), submitTtAssignment_);
+  await loadTopicsForTest();
+  await loadMyTopicTests();
+}
+
+async function loadTopicsForTest() {
+  const subjectId = document.getElementById('ttSubject').value;
+  ttTopicsCache = subjectId ? await api('listTopics', { subjectId: subjectId }) : [];
+  document.getElementById('ttTopic').innerHTML = ttTopicsCache.map(function (t) { return '<option value="' + t.TopicID + '">' + t.TopicName + '</option>'; }).join('')
+    || '<option value="">Add a topic first (Subjects tab)</option>';
+}
+
+async function submitTopicTest_() {
+  const file = document.getElementById('ttFile').files[0];
+  if (!file) { toast('Choose a .docx file', true); return; }
+  const fileBase64 = await fileToBase64(file);
+  const paper = await api('uploadPastPaper', {
+    subjectId: document.getElementById('ttSubject').value,
+    topicId: document.getElementById('ttTopic').value,
+    paperType: document.getElementById('ttType').value,
+    title: document.getElementById('ttTitle').value,
+    fileBase64: fileBase64, fileName: file.name
+  });
+  toast('Topic test submitted');
+  document.getElementById('topicTestForm').reset();
+  ttPendingPaper = paper;
+  document.getElementById('ttAssignCard').classList.remove('hidden');
+  ttRosterStudents = await api('listRegisteredStudents', { subjectId: paper.SubjectID }).catch(function () { return []; });
+  renderTtStudentPicker();
+  document.getElementById('ttAssignCard').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  await loadMyTopicTests();
+}
+
+function renderTtStudentPicker() {
+  const container = document.getElementById('ttStudentPicker');
+  if (!ttRosterStudents.length) {
+    container.innerHTML = '<p class="muted">No students registered to this subject yet.</p>';
+    return;
+  }
+  let html = '<label><input type="checkbox" id="ttSelectAll"> Select all registered students</label><br>';
+  html += ttRosterStudents.map(function (s) {
+    return '<label style="display:inline-block;margin:4px 10px 4px 0;font-weight:normal;">' +
+      '<input type="checkbox" class="tt-student-cb" value="' + s.UserID + '"> ' + s.FullName + '</label>';
+  }).join('');
+  container.innerHTML = html;
+  document.getElementById('ttSelectAll').addEventListener('change', function () {
+    document.querySelectorAll('.tt-student-cb').forEach(function (cb) { cb.checked = document.getElementById('ttSelectAll').checked; });
+  });
+}
+
+async function submitTtAssignment_() {
+  if (!ttPendingPaper) { toast('Submit a topic test first', true); return; }
+  const studentIds = Array.from(document.querySelectorAll('.tt-student-cb:checked')).map(function (cb) { return cb.value; });
+  if (!studentIds.length) { toast('Select at least one student', true); return; }
+  const result = await api('assignPastPaper', { paperId: ttPendingPaper.PaperID, studentIds: JSON.stringify(studentIds) });
+  toast(result.message);
+  document.getElementById('ttAssignCard').classList.add('hidden');
+  ttPendingPaper = null;
+  await loadMyAssignments();
+}
+
+async function loadMyTopicTests() {
+  const perSubject = await Promise.all(mySubjects.map(function (s) { return api('listPastPapers', { subjectId: s.SubjectID }); }));
+  const mine = [].concat.apply([], perSubject).filter(function (pp) { return pp.UploadedBy === me.UserID; });
+  const body = document.getElementById('ttListBody');
+  body.innerHTML = mine.length ? '' : '<tr><td colspan="6" class="muted">You haven\'t submitted any topic tests yet</td></tr>';
+  mine.slice().reverse().forEach(function (pp) {
+    const subj = mySubjects.find(function (s) { return s.SubjectID === pp.SubjectID; });
+    const topic = ttTopicsCache.find(function (t) { return t.TopicID === pp.TopicID; });
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td>' + (subj ? subj.SubjectName : pp.SubjectID) + '</td><td>' + (topic ? topic.TopicName : (pp.TopicID || '—')) + '</td>' +
+      '<td>' + pp.PaperType + '</td><td>' + pp.Title + '</td>' +
+      '<td><a href="' + pp.FileURL + '" target="_blank">Open</a></td><td></td>';
+    const delBtn = document.createElement('button');
+    delBtn.textContent = 'Delete'; delBtn.className = 'danger';
+    guardClick(delBtn, async function () {
+      if (!confirm('Delete this topic test?')) return;
+      await api('deletePastPaper', { paperId: pp.PaperID }); toast('Deleted'); await loadMyTopicTests();
+    });
+    tr.lastElementChild.appendChild(delBtn);
+    body.appendChild(tr);
+  });
 }
 
 async function loadPastQuestionsForSubject() {
@@ -568,7 +702,7 @@ async function loadPastQuestionsForSubject() {
   const paperSel = document.getElementById('ppPaper');
   paperSel.innerHTML = ppPapers.length
     ? ppPapers.map(function (pp) { return '<option value="' + pp.PaperID + '">' + pp.Title + ' (' + pp.PaperType + ', ' + pp.Year + ')</option>'; }).join('')
-    : '<option value="">No papers uploaded for this subject yet</option>';
+    : '<option value="">No topic tests for this subject yet</option>';
   ppRosterStudents = await api('listRegisteredStudents', { subjectId: subjectId }).catch(function () { return []; });
   renderStudentPicker();
 }
