@@ -33,7 +33,7 @@ async function loadAll() {
     safeLoad('templatesBody', 6, loadTemplates),
     safeLoad('pastPapersBody', 7, loadPastPapers),
     safeLoad('ppOverviewBody', 7, loadPastPaperPerformanceOverview),
-    safeLoad('attendanceBody', 5, loadAttendance),
+    safeLoad('attendanceBody', 6, loadAttendance),
     safeLoad('curOverviewBody', 7, loadCurriculumOverview),
     safeLoad('lpReviewBody', 8, loadLessonPlanReviewQueue),
     safeLoad('lrReviewBody', 8, loadLessonReportReviewQueue)
@@ -138,7 +138,7 @@ guardSubmit(document.getElementById('topicForm'), async function () {
 
 function fillSubjectSelects() {
   const opts = allSubjects.map(function (s) { return '<option value="' + s.SubjectID + '">' + s.SubjectName + '</option>'; }).join('');
-  ['topicSubject', 'markSubject', 'tplSubject', 'ppSubject'].forEach(function (id) { document.getElementById(id).innerHTML = opts; });
+  ['topicSubject', 'markSubject', 'tplSubject'].forEach(function (id) { document.getElementById(id).innerHTML = opts; });
 }
 
 function fillStudentSelects() {
@@ -245,7 +245,7 @@ async function renderAttendance() {
   const studentId = document.getElementById('attFilterStudent').value;
   const rows = await api('listAttendance', { subjectId: subjectId, studentId: studentId });
   const body = document.getElementById('attendanceBody');
-  body.innerHTML = rows.length ? '' : '<tr><td colspan="5" class="muted">No attendance recorded yet</td></tr>';
+  body.innerHTML = rows.length ? '' : '<tr><td colspan="6" class="muted">No attendance recorded yet</td></tr>';
   rows.slice().reverse().forEach(function (r) {
     const student = allUsers.find(function (u) { return u.UserID === r.StudentID; });
     const subj = allSubjects.find(function (s) { return s.SubjectID === r.SubjectID; });
@@ -253,6 +253,7 @@ async function renderAttendance() {
     const tr = document.createElement('tr');
     tr.innerHTML = '<td>' + fmtDate(r.AttendanceDate) + '</td><td>' + (student ? student.FullName : r.StudentID) + '</td>' +
       '<td>' + (subj ? subj.SubjectName : r.SubjectID) + '</td><td>' + r.Status + '</td>' +
+      '<td class="muted">' + (r.Comment || '—') + '</td>' +
       '<td>' + (marker ? marker.FullName : r.MarkedBy) + '</td>';
     body.appendChild(tr);
   });
@@ -312,42 +313,22 @@ guardSubmit(document.getElementById('geminiForm'), async function () {
   toast('Gemini API key saved');
 });
 
-// ---- Past Questions -----------------------------------------------------------------
-guardSubmit(document.getElementById('pastPaperForm'), async function () {
-  const file = document.getElementById('ppFile').files[0];
-  if (!file) { toast('Choose a .docx file', true); return; }
-  const fileBase64 = await fileToBase64(file);
-  const rec = await api('uploadPastPaper', {
-    subjectId: document.getElementById('ppSubject').value,
-    paperType: document.getElementById('ppType').value,
-    year: document.getElementById('ppYear').value,
-    examSitting: document.getElementById('ppSitting').value,
-    title: document.getElementById('ppTitle').value,
-    fileBase64: fileBase64, fileName: file.name
-  });
-  if (rec.ParseWarnings) {
-    toast('Uploaded with warnings — check the notes column', true);
-  } else {
-    toast('Past paper uploaded');
-  }
-  document.getElementById('pastPaperForm').reset();
-  await loadPastPapers();
-});
-
+// ---- Topic Tests (view-only for admin — teachers submit these from their own dashboard) --
 async function loadPastPapers() {
-  const rows = await api('listPastPapers', {});
+  const [rows, allTopics] = await Promise.all([api('listPastPapers', {}), api('listTopics', {})]);
   const body = document.getElementById('pastPapersBody');
-  body.innerHTML = rows.length ? '' : '<tr><td colspan="7" class="muted">No past papers uploaded yet</td></tr>';
+  body.innerHTML = rows.length ? '' : '<tr><td colspan="6" class="muted">No topic tests submitted yet</td></tr>';
   rows.slice().reverse().forEach(function (pp) {
     const subj = allSubjects.find(function (s) { return s.SubjectID === pp.SubjectID; });
+    const topic = allTopics.find(function (t) { return t.TopicID === pp.TopicID; });
     const tr = document.createElement('tr');
-    tr.innerHTML = '<td>' + (subj ? subj.SubjectName : pp.SubjectID) + '</td><td>' + pp.PaperType + '</td>' +
-      '<td>' + pp.Year + '</td><td>' + (pp.ExamSitting || '—') + '</td><td>' + pp.Title + '</td>' +
+    tr.innerHTML = '<td>' + (subj ? subj.SubjectName : pp.SubjectID) + '</td>' +
+      '<td>' + (topic ? topic.TopicName : '—') + '</td><td>' + pp.PaperType + '</td><td>' + pp.Title + '</td>' +
       '<td class="muted" style="max-width:220px;">' + (pp.ParseWarnings || '—') + '</td><td></td>';
     const delBtn = document.createElement('button');
     delBtn.textContent = 'Delete'; delBtn.className = 'danger';
     guardClick(delBtn, async function () {
-      if (!confirm('Delete this past paper?')) return;
+      if (!confirm('Delete this topic test?')) return;
       await api('deletePastPaper', { paperId: pp.PaperID }); toast('Deleted'); await loadPastPapers();
     });
     tr.lastElementChild.appendChild(delBtn);
