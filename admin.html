@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>admin</title>
+<title>Admin Dashboard — JangAfrika</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -10,7 +10,7 @@
 <header class="topbar">
   <div class="brand">
     <img src="logo.png" onerror="this.style.display='none'">
-    <div><h1>JangAfrika</h1><small>Admin</small></div>
+    <div><h1>JangAfrika</h1><small>Admin Dashboard</small></div>
   </div>
   <nav>
     <span style="margin-right:16px;text-align:right;display:inline-block;">
@@ -30,7 +30,7 @@
     <button data-tab="payments">Payments</button>
     <button data-tab="attendance">Attendance</button>
     <button data-tab="templates">Templates</button>
-    <button data-tab="pastquestions">Past Questions</button>
+    <button data-tab="pastquestions">Topic Tests</button>
     <button data-tab="curriculum">Curriculum &amp; QA</button>
     <button data-tab="settings">Settings</button>
   </div>
@@ -137,8 +137,8 @@
         <div><label>Filter by student</label><select id="attFilterStudent"><option value="">All students</option></select></div>
       </div>
       <table>
-        <thead><tr><th>Date</th><th>Student</th><th>Subject</th><th>Status</th><th>Marked by</th></tr></thead>
-        <tbody id="attendanceBody"><tr><td colspan="5" class="muted">Loading…</td></tr></tbody>
+        <thead><tr><th>Date</th><th>Student</th><th>Subject</th><th>Status</th><th>Comment / reason</th><th>Marked by</th></tr></thead>
+        <tbody id="attendanceBody"><tr><td colspan="6" class="muted">Loading…</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -176,38 +176,19 @@
   <!-- PAST QUESTIONS -->
   <div id="tab-pastquestions" class="tabpane hidden">
     <div class="card">
-      <h2>Upload a past question paper</h2>
-      <p class="muted">For <strong>Objective</strong> papers, upload a .docx where each question starts with "1.", "2." etc,
-        each option starts with "A)", "B)", "C)", "D)", and you've <strong>bolded the text of the correct option</strong> —
-        the system reads the file and automatically builds a self-graded test from it. <strong>Theory</strong> papers are
-        stored as download-only (no auto-grading).</p>
-      <form id="pastPaperForm" class="grid cols-2">
-        <div><label>Subject</label><select id="ppSubject"></select></div>
-        <div><label>Paper type</label>
-          <select id="ppType"><option value="Objective">Objective</option><option value="Theory">Theory</option></select>
-        </div>
-        <div><label>Year</label><input type="number" id="ppYear" placeholder="2024" required></div>
-        <div><label>Exam sitting</label>
-          <select id="ppSitting"><option value="June">June</option><option value="November">November</option><option value="February">February</option></select>
-        </div>
-        <div><label>Title</label><input type="text" id="ppTitle" required placeholder="e.g. Mathematics Objective 2024"></div>
-        <div><label>File (.docx)</label><input type="file" id="ppFile" accept=".docx" required></div>
-        <div><button type="submit">Upload paper</button></div>
-      </form>
-    </div>
-    <div class="card">
-      <h2>Uploaded papers</h2>
+      <h2>Topic tests</h2>
+      <p class="muted">Teachers submit topic tests from their own dashboard (Curriculum &amp; QA → "Submit topic test" on any topic). This tab is for oversight — view what's been submitted and how students are doing, not for uploading.</p>
       <table>
-        <thead><tr><th>Subject</th><th>Type</th><th>Year</th><th>Sitting</th><th>Title</th><th>Parse notes</th><th></th></tr></thead>
-        <tbody id="pastPapersBody"><tr><td colspan="7" class="muted">Loading…</td></tr></tbody>
+        <thead><tr><th>Subject</th><th>Topic</th><th>Type</th><th>Title</th><th>Parse notes</th><th></th></tr></thead>
+        <tbody id="pastPapersBody"><tr><td colspan="6" class="muted">Loading…</td></tr></tbody>
       </table>
     </div>
     <div class="card">
-      <h2>Student performance on assigned past papers</h2>
-      <p class="muted">Every past paper a teacher has assigned to a student, with their latest score and a plain recommendation.</p>
+      <h2>Student performance on assigned topic tests</h2>
+      <p class="muted">Every topic test a teacher has assigned to a student, with their latest score and a plain recommendation.</p>
       <label>Filter by subject</label><select id="ppOverviewSubject"><option value="">All subjects</option></select>
       <table>
-        <thead><tr><th>Student</th><th>Class teacher</th><th>Subject</th><th>Paper</th><th>Assigned</th><th>Score</th><th>Recommendation</th></tr></thead>
+        <thead><tr><th>Student</th><th>Class teacher</th><th>Subject</th><th>Test</th><th>Assigned</th><th>Score</th><th>Recommendation</th></tr></thead>
         <tbody id="ppOverviewBody"><tr><td colspan="7" class="muted">Loading…</td></tr></tbody>
       </table>
     </div>
