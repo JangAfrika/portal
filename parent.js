@@ -77,8 +77,8 @@ async function loadChild(studentId) {
     }, 4, 'No topics registered yet');
 
     fillTable('attendanceBody', data.attendance, function (a) {
-      return [fmtDate(a.AttendanceDate), subjectName(a.SubjectID), a.Status];
-    }, 3, 'No attendance recorded yet');
+      return [fmtDate(a.AttendanceDate), subjectName(a.SubjectID), a.Status, a.Comment || '—'];
+    }, 4, 'No attendance recorded yet');
 
     fillTable('paymentsBody', data.payments, function (p) {
       return [p.Amount, p.Term, fmtDate(p.DatePaid), p.Status];
