@@ -300,11 +300,12 @@ async function loadMarks() {
 async function loadAttendance() {
   const rows = await api('listAttendance', {});
   const body = document.getElementById('attendanceBody');
-  body.innerHTML = rows.length ? '' : '<tr><td colspan="3" class="muted">No attendance recorded yet</td></tr>';
+  body.innerHTML = rows.length ? '' : '<tr><td colspan="4" class="muted">No attendance recorded yet</td></tr>';
   rows.slice().reverse().forEach(function (r) {
     const subj = subjects.find(function (s) { return s.SubjectID === r.SubjectID; });
     const tr = document.createElement('tr');
-    tr.innerHTML = '<td>' + fmtDate(r.AttendanceDate) + '</td><td>' + (subj ? subj.SubjectName : r.SubjectID) + '</td><td>' + r.Status + '</td>';
+    tr.innerHTML = '<td>' + fmtDate(r.AttendanceDate) + '</td><td>' + (subj ? subj.SubjectName : r.SubjectID) + '</td><td>' + r.Status + '</td>' +
+      '<td class="muted">' + (r.Comment || '—') + '</td>';
     body.appendChild(tr);
   });
 }
