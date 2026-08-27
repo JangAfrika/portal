@@ -6,7 +6,7 @@
  */
 
 // PASTE your deployed Apps Script Web App URL here (ends in /exec)
-const API_URL = 'https://script.google.com/macros/s/AKfycbwBCiuadkPsS4ScdRf5PwWgZOO2_-SrKK9FzOmPgNLrNwmzyidSH6bogEydBLtKA3s2Ig/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxIMpKLOkxu2dtnnc0K82VnHg9a8fdZJWMPl_Xd-cpH1_P633MgzEOcqTYGHpbgweJ85w/exec';
 
 const SCHOOL = {
   name: 'JangAfrika',
