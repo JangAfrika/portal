@@ -2,37 +2,57 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Staff</title>
+<title>Staff Dashboard — JangAfrika</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header class="topbar">
+  <button class="hamburger-btn no-print" id="hamburgerBtn" aria-label="Open menu">☰</button>
   <div class="brand">
     <img src="logo.png" onerror="this.style.display='none'">
     <div><h1>JangAfrika</h1><small>Staff Dashboard</small></div>
   </div>
   <nav>
-    <span style="margin-right:16px;text-align:right;display:inline-block;">
-      <strong id="whoamiName">—</strong><br><small id="whoamiRole" style="opacity:.85;">—</small>
-    </span>
-    <a href="profile.html">My Profile</a>
-    <a href="#" onclick="logout()">Log out</a>
+    <span id="whoamiName" style="display:none;"></span>
+    <span id="whoamiRole" style="display:none;"></span>
   </nav>
 </header>
 
 <div class="container">
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+  <div class="dash-layout">
   <div class="tabs no-print">
-    <button data-tab="attendance" class="active">Attendance</button>
-    <button data-tab="materials">Materials</button>
-    <button data-tab="assignments">Assignments</button>
-    <button data-tab="grading">Grade Submissions</button>
-    <button data-tab="tasks">Topic Tasks</button>
-    <button data-tab="lessonplans">Lesson Plan</button>
-    <button data-tab="syllabus">Syllabus</button>
-    <button data-tab="curriculum">Curriculum &amp; QA</button>
-    <button data-tab="pastquestions">Topic Tests</button>
+    <div class="sidebar-profile">
+      <img id="sidebarPhoto" src="https://placehold.co/64x64?text=%20" alt="">
+      <div class="sidebar-profile-name" id="sidebarName">—</div>
+      <div class="sidebar-profile-role" id="sidebarRole">Staff</div>
+    </div>
+    <button data-tab="attendance" class="active">📋 Attendance</button>
+    <button data-tab="materials">📚 Materials</button>
+    <button data-tab="assignments">📝 Assignments</button>
+    <button data-tab="grading">✅ Grade Submissions</button>
+    <button data-tab="assessment">🧪 Topic Assessment</button>
+    <button data-tab="lessonplans">📄 Lesson Plan</button>
+    <button data-tab="syllabus">🗂️ Syllabus</button>
+    <button data-tab="curriculum">🎯 Curriculum &amp; QA</button>
+    <a href="profile.html" style="display:flex;align-items:center;gap:8px;margin-top:10px;color:var(--brand);text-decoration:none;font-size:.9rem;">👤 My Profile</a>
+    <a href="#" class="sidebar-logout" onclick="logout()">↩ Log out</a>
   </div>
+
+  <div class="dash-content">
+
+  <div class="dash-header">
+    <div>
+      <h2>Your Teaching Space</h2>
+      <p class="dash-subtitle" id="dashGreeting">Welcome back!</p>
+    </div>
+    <div class="dash-header-actions no-print">
+      <div class="dash-search"><input id="dashSearch" placeholder="🔍 Search this page…"></div>
+      <button class="dash-bell" id="dashBellBtn">🔔<span class="dash-bell-badge hidden" id="dashBellBadge">0</span></button>
+    </div>
+  </div>
+  <div class="card hidden" id="dashNotifPanel"></div>
 
   <!-- ATTENDANCE -->
   <div id="tab-attendance" class="tabpane">
@@ -107,26 +127,86 @@
   </div>
 
   <!-- TASKS -->
-  <div id="tab-tasks" class="tabpane hidden">
+  <!-- TOPIC ASSESSMENT -->
+  <div id="tab-assessment" class="tabpane hidden">
     <div class="card">
-      <h2>Create a topic mastery task (quiz)</h2>
-      <p class="muted">Add questions with multiple choice options; students get a percentage pass/fail once submitted.</p>
-      <form id="taskForm" class="grid cols-2">
-        <div><label>Subject</label><select id="taskSubject"></select></div>
-        <div><label>Topic</label><select id="taskTopic"></select></div>
-        <div><label>Title</label><input type="text" id="taskTitle" required></div>
-        <div><label>Pass mark (%)</label><input type="number" id="taskPass" value="50"></div>
-      </form>
-      <div id="questionsBuilder"></div>
-      <button type="button" id="addQuestionBtn" class="secondary">+ Add question</button>
-      <button type="button" id="saveTaskBtn" style="margin-left:8px;">Save task</button>
+      <h2>Topic Assessment</h2>
+      <p class="muted">Choose what you want to do — only that section will show.</p>
+      <button id="showCreateTaskBtn">📝 Create topic task</button>
+      <button id="showUploadTestBtn" class="secondary" style="margin-left:8px;">📤 Upload topic test</button>
     </div>
-    <div class="card">
-      <h2>Task results</h2>
-      <table>
-        <thead><tr><th>Student</th><th>Task</th><th>Score</th><th>%</th><th>Result</th><th>Recommendation</th><th>Date</th></tr></thead>
-        <tbody id="taskResultsBody"></tbody>
-      </table>
+
+    <!-- CREATE TOPIC TASK -->
+    <div id="assessCreateTaskSection" class="hidden">
+      <div class="card">
+        <h2>Create a topic mastery task (quiz)</h2>
+        <p class="muted">Add questions with multiple choice options; students get a percentage pass/fail once submitted.</p>
+        <form id="taskForm" class="grid cols-2">
+          <div><label>Subject</label><select id="taskSubject"></select></div>
+          <div><label>Topic</label><select id="taskTopic"></select></div>
+          <div><label>Title</label><input type="text" id="taskTitle" required></div>
+          <div><label>Pass mark (%)</label><input type="number" id="taskPass" value="50"></div>
+        </form>
+        <div id="questionsBuilder"></div>
+        <button type="button" id="addQuestionBtn" class="secondary">+ Add question</button>
+        <button type="button" id="saveTaskBtn" style="margin-left:8px;">Save task</button>
+      </div>
+      <div class="card">
+        <h2>Task results</h2>
+        <table>
+          <thead><tr><th>Student</th><th>Task</th><th>Score</th><th>%</th><th>Result</th><th>Recommendation</th><th>Date</th></tr></thead>
+          <tbody id="taskResultsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- UPLOAD TOPIC TEST -->
+    <div id="assessUploadTestSection" class="hidden">
+      <div class="card">
+        <h2>Submit a topic test</h2>
+        <p class="muted">For <strong>Objective</strong> tests, upload a .docx where each question starts with "1.", "2." etc, each option starts with "A)", "B)", "C)", "D)", and you've <strong>bolded the text of the correct option</strong> — the system reads the file and automatically builds a self-graded test from it. <strong>Theory</strong> tests are stored as download-only (no auto-grading).</p>
+        <form id="topicTestForm" class="grid cols-3">
+          <div><label>Subject</label><select id="ttSubject"></select></div>
+          <div><label>Topic</label><select id="ttTopic"></select></div>
+          <div><label>Test type</label>
+            <select id="ttType"><option value="Objective">Objective</option><option value="Theory">Theory</option></select>
+          </div>
+          <div><label>Title</label><input type="text" id="ttTitle" required></div>
+          <div><label>File (.docx)</label><input type="file" id="ttFile" accept=".docx" required></div>
+          <div style="align-self:end;"><button type="submit">Submit topic test</button></div>
+        </form>
+      </div>
+
+      <div class="card hidden" id="ttAssignCard">
+        <h2>Assign this test to students</h2>
+        <p class="muted">Submitted — now pick who should take it.</p>
+        <div id="ttStudentPicker" style="margin-top:10px;"></div>
+        <button id="ttAssignBtn" style="margin-top:10px;">Assign to selected students</button>
+      </div>
+
+      <div class="card">
+        <h2>My topic tests</h2>
+        <table>
+          <thead><tr><th>Subject</th><th>Topic</th><th>Type</th><th>Title</th><th>File</th><th></th></tr></thead>
+          <tbody id="ttListBody"><tr><td colspan="6" class="muted">Loading…</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h2>Assign an existing test to students</h2>
+        <p class="muted">Only tests for subjects you teach show here.</p>
+        <label>Subject</label><select id="ppSubject"></select>
+        <label>Test</label><select id="ppPaper"></select>
+        <div id="ppStudentPicker" style="margin-top:10px;"></div>
+        <button id="ppAssignBtn" style="margin-top:10px;">Assign to selected students</button>
+      </div>
+      <div class="card">
+        <h2>My assignments</h2>
+        <table>
+          <thead><tr><th>Test</th><th>Subject</th><th>Student</th><th>Assigned</th><th>Score</th></tr></thead>
+          <tbody id="ppAssignmentsBody"><tr><td colspan="5" class="muted">Loading…</td></tr></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -211,54 +291,7 @@
       </table>
     </div>
   </div>
-
-  <!-- PAST QUESTIONS -->
-  <div id="tab-pastquestions" class="tabpane hidden">
-    <div class="card">
-      <h2>Submit a topic test</h2>
-      <p class="muted">For <strong>Objective</strong> tests, upload a .docx where each question starts with "1.", "2." etc, each option starts with "A)", "B)", "C)", "D)", and you've <strong>bolded the text of the correct option</strong> — the system reads the file and automatically builds a self-graded test from it. <strong>Theory</strong> tests are stored as download-only (no auto-grading).</p>
-      <form id="topicTestForm" class="grid cols-3">
-        <div><label>Subject</label><select id="ttSubject"></select></div>
-        <div><label>Topic</label><select id="ttTopic"></select></div>
-        <div><label>Test type</label>
-          <select id="ttType"><option value="Objective">Objective</option><option value="Theory">Theory</option></select>
-        </div>
-        <div><label>Title</label><input type="text" id="ttTitle" required></div>
-        <div><label>File (.docx)</label><input type="file" id="ttFile" accept=".docx" required></div>
-        <div style="align-self:end;"><button type="submit">Submit topic test</button></div>
-      </form>
-    </div>
-
-    <div class="card hidden" id="ttAssignCard">
-      <h2>Assign this test to students</h2>
-      <p class="muted">Submitted — now pick who should take it.</p>
-      <div id="ttStudentPicker" style="margin-top:10px;"></div>
-      <button id="ttAssignBtn" style="margin-top:10px;">Assign to selected students</button>
-    </div>
-
-    <div class="card">
-      <h2>My topic tests</h2>
-      <table>
-        <thead><tr><th>Subject</th><th>Topic</th><th>Type</th><th>Title</th><th>File</th><th></th></tr></thead>
-        <tbody id="ttListBody"><tr><td colspan="6" class="muted">Loading…</td></tr></tbody>
-      </table>
-    </div>
-
-    <div class="card">
-      <h2>Assign an existing test to students</h2>
-      <p class="muted">Only tests for subjects you teach show here.</p>
-      <label>Subject</label><select id="ppSubject"></select>
-      <label>Test</label><select id="ppPaper"></select>
-      <div id="ppStudentPicker" style="margin-top:10px;"></div>
-      <button id="ppAssignBtn" style="margin-top:10px;">Assign to selected students</button>
-    </div>
-    <div class="card">
-      <h2>My assignments</h2>
-      <table>
-        <thead><tr><th>Test</th><th>Subject</th><th>Student</th><th>Assigned</th><th>Score</th></tr></thead>
-        <tbody id="ppAssignmentsBody"><tr><td colspan="5" class="muted">Loading…</td></tr></tbody>
-      </table>
-    </div>
+  </div>
   </div>
 </div>
 
