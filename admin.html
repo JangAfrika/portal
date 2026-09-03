@@ -2,12 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Admin</title>
+<title>Admin Dashboard — JangAfrika</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header class="topbar">
+  <button class="hamburger-btn no-print" id="hamburgerBtn" aria-label="Open menu">☰</button>
   <div class="brand">
     <img src="logo.png" onerror="this.style.display='none'">
     <div><h1>JangAfrika</h1><small>Admin Dashboard</small></div>
@@ -22,6 +23,8 @@
 </header>
 
 <div class="container">
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+  <div class="dash-layout">
   <div class="tabs no-print">
     <button data-tab="approvals" class="active">Approvals</button>
     <button data-tab="users">Users</button>
@@ -34,6 +37,8 @@
     <button data-tab="curriculum">Curriculum &amp; QA</button>
     <button data-tab="settings">Settings</button>
   </div>
+
+  <div class="dash-content">
 
   <!-- APPROVALS -->
   <div id="tab-approvals" class="tabpane">
@@ -256,6 +261,13 @@
         <div style="align-self:end;"><button type="submit">Save key</button></div>
       </form>
     </div>
+    <div class="card">
+      <h2>Repair broken profile photo links</h2>
+      <p class="muted">Accounts that uploaded a photo before a fix to how Drive links work may show a broken image icon instead of their photo. This rewrites those links to the working format — it does not require anyone to re-upload anything, and is safe to run any time.</p>
+      <button id="repairPhotosBtn" class="secondary">Repair profile photo links</button>
+    </div>
+  </div>
+  </div>
   </div>
 </div>
 
