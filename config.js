@@ -6,7 +6,7 @@
  */
 
 // PASTE your deployed Apps Script Web App URL here (ends in /exec)
-const API_URL = 'https://script.google.com/macros/s/AKfycbxIMpKLOkxu2dtnnc0K82VnHg9a8fdZJWMPl_Xd-cpH1_P633MgzEOcqTYGHpbgweJ85w/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxmvW_A6HbFnRU4v7wlqBBPr1ntk1ITENAOB7MIbe8K1jmwduq7rwXmE50_74xu8jXUlg/exec';
 
 const SCHOOL = {
   name: 'JangAfrika',
@@ -81,6 +81,14 @@ function requirePage(allowedRoles) {
   const roleEl = document.getElementById('whoamiRole');
   if (nameEl) nameEl.textContent = user.FullName;
   if (roleEl) roleEl.textContent = user.Role;
+
+  // Sidebar profile block (photo + name + role), if this page has one.
+  const sbPhoto = document.getElementById('sidebarPhoto');
+  const sbName = document.getElementById('sidebarName');
+  const sbRole = document.getElementById('sidebarRole');
+  if (sbPhoto) sbPhoto.src = user.PhotoURL || 'https://placehold.co/64x64?text=%20';
+  if (sbName) sbName.textContent = user.FullName;
+  if (sbRole) sbRole.textContent = user.Role;
   return user;
 }
 
@@ -244,4 +252,47 @@ async function downloadPastPaperPdf(paperId) {
   for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
   const blob = new Blob([arr], { type: 'application/pdf' });
   triggerDownload(blob, result.fileName);
+}
+
+/** Wires up the hamburger button on dashboard pages so the sidebar nav
+ *  (the same .tabs element used for desktop tab-switching) slides in as an
+ *  off-canvas drawer on small screens. No-ops harmlessly on pages that
+ *  don't have this markup (login, register, etc). Closing on backdrop
+ *  click and after picking a tab keeps the drawer from covering content. */
+function initSidebarToggle() {
+  const hamburger = document.getElementById('hamburgerBtn');
+  const tabs = document.querySelector('.tabs');
+  const backdrop = document.getElementById('sidebarBackdrop');
+  if (!hamburger || !tabs || !backdrop) return;
+  function closeSidebar() { tabs.classList.remove('open'); backdrop.classList.remove('open'); }
+  function openSidebar() { tabs.classList.add('open'); backdrop.classList.add('open'); }
+  hamburger.addEventListener('click', function () {
+    if (tabs.classList.contains('open')) closeSidebar(); else openSidebar();
+  });
+  backdrop.addEventListener('click', closeSidebar);
+  tabs.querySelectorAll('button').forEach(function (btn) {
+    btn.addEventListener('click', closeSidebar);
+  });
+}
+initSidebarToggle();
+
+/** Wires a dashboard's search box to filter the currently-visible tab's
+ *  table rows and card/tile elements by plain text match — a lightweight,
+ *  genuinely functional "quick find" rather than a decorative input. */
+function initDashSearch(inputId) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  input.addEventListener('input', function () {
+    const q = input.value.trim().toLowerCase();
+    const activePane = document.querySelector('.tabpane:not(.hidden)');
+    if (!activePane) return;
+    activePane.querySelectorAll('table tbody tr').forEach(function (tr) {
+      const text = tr.textContent.toLowerCase();
+      tr.style.display = (!q || text.indexOf(q) > -1) ? '' : 'none';
+    });
+    activePane.querySelectorAll('.task-tile, .course-card').forEach(function (el) {
+      const text = el.textContent.toLowerCase();
+      el.style.display = (!q || text.indexOf(q) > -1) ? '' : 'none';
+    });
+  });
 }
