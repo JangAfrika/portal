@@ -11,6 +11,20 @@ document.querySelectorAll('.tabs button').forEach(function (btn) {
 
 let mySubjects = [], allTopics = [], myRoster = [];
 
+/** Toggles which half of the merged "Topic Assessment" tab is visible —
+ *  "task" (create a topic mastery quiz) or "upload" (submit a topic test
+ *  docx) — so a teacher only ever sees the one thing they clicked into. */
+function showAssessmentSection(which) {
+  const taskSection = document.getElementById('assessCreateTaskSection');
+  const uploadSection = document.getElementById('assessUploadTestSection');
+  const taskBtn = document.getElementById('showCreateTaskBtn');
+  const uploadBtn = document.getElementById('showUploadTestBtn');
+  taskSection.classList.toggle('hidden', which !== 'task');
+  uploadSection.classList.toggle('hidden', which !== 'upload');
+  taskBtn.className = which === 'task' ? '' : 'secondary';
+  uploadBtn.className = which === 'upload' ? '' : 'secondary';
+}
+
 /** Every student registered (subject- or topic-level) to any subject this
  *  teacher teaches, merged and de-duplicated. listUsers is Admin-only, so
  *  this is how teachers resolve StudentID -> name everywhere on this page
@@ -25,6 +39,13 @@ async function loadMyRoster() {
 }
 
 async function init() {
+  const firstName = (me.FullName || '').split(' ')[0];
+  document.getElementById('dashGreeting').textContent = firstName
+    ? 'Welcome back, ' + firstName + ' — here\'s what needs your attention today.'
+    : 'Welcome back!';
+  initDashSearch('dashSearch');
+  document.getElementById('dashBellBtn').addEventListener('click', toggleNotifPanel);
+
   const subjects = await api('listSubjects', {});
   // A teacher only sees subjects they're assigned to (Admin sees all).
   mySubjects = (me.Role === 'Admin') ? subjects : subjects.filter(function (s) {
@@ -50,11 +71,14 @@ async function init() {
     safeCall(loadLessonReportReviewStatus, 'lesson report status'),
     safeCall(initPastQuestionsAssign, 'past questions')
   ]);
+  await safeCall(updateNotifBadge, 'notifications');
 
   ['attSubject'].forEach(function (id) { document.getElementById(id).addEventListener('change', loadAttendanceRoster); });
   document.getElementById('attHistorySubject').addEventListener('change', loadAttendanceHistory);
   document.getElementById('curSubject').addEventListener('change', renderCurriculum);
   document.getElementById('curTopic').addEventListener('change', renderSelectedTopic);
+  document.getElementById('showCreateTaskBtn').addEventListener('click', function () { showAssessmentSection('task'); });
+  document.getElementById('showUploadTestBtn').addEventListener('click', function () { showAssessmentSection('upload'); });
   document.getElementById('matSubject').addEventListener('change', function () { fillTopicSelect('matTopic', this.value); });
   document.getElementById('asgSubject').addEventListener('change', function () { fillTopicSelect('asgTopic', this.value); });
   document.getElementById('taskSubject').addEventListener('change', function () { fillTopicSelect('taskTopic', this.value); });
@@ -197,6 +221,49 @@ async function loadAssignmentsForGrading() {
   window._assignments = all;
   loadSubmissions();
 }
+/** Real, actionable notification count — not a fabricated feed: ungraded
+ *  submissions across every assignment this teacher owns, plus any lesson
+ *  report an admin has rejected and is waiting on a resubmission for. */
+async function getStaffNotifications_() {
+  const assignments = window._assignments || [];
+  const perAssignment = await Promise.all(assignments.map(function (a) {
+    return api('listSubmissions', { assignmentId: a.AssignmentID }).catch(function () { return []; });
+  }));
+  const ungraded = [].concat.apply([], perAssignment).filter(function (s) { return s.Status !== 'Graded'; });
+
+  const reports = await api('listLessonReports', {}).catch(function () { return []; });
+  const rejected = reports.filter(function (r) { return r.ReviewStatus === 'Rejected'; });
+
+  return { ungraded: ungraded, rejectedReports: rejected };
+}
+
+async function updateNotifBadge() {
+  const notif = await getStaffNotifications_();
+  const count = notif.ungraded.length + notif.rejectedReports.length;
+  const badge = document.getElementById('dashBellBadge');
+  badge.textContent = count;
+  badge.classList.toggle('hidden', count === 0);
+}
+
+async function toggleNotifPanel() {
+  const panel = document.getElementById('dashNotifPanel');
+  if (!panel.classList.contains('hidden')) { panel.classList.add('hidden'); return; }
+  const notif = await getStaffNotifications_();
+  let html = '<h3 style="margin-top:0;">Notifications</h3>';
+  if (!notif.ungraded.length && !notif.rejectedReports.length) {
+    html += '<p class="muted">You\'re all caught up — nothing needs your attention right now.</p>';
+  } else {
+    html += '<ul>';
+    if (notif.ungraded.length) html += '<li>' + notif.ungraded.length + ' submission(s) waiting to be graded.</li>';
+    notif.rejectedReports.forEach(function (r) {
+      html += '<li>Lesson report "' + r.Title + '" was rejected — check the notes and resubmit.</li>';
+    });
+    html += '</ul>';
+  }
+  panel.innerHTML = html;
+  panel.classList.remove('hidden');
+}
+
 async function loadSubmissions() {
   const assignmentId = document.getElementById('gradeAssignment').value;
   let rowsPromise;
@@ -433,7 +500,8 @@ function renderTopicCard(topic, subtopics, lessonReports) {
   testBtn.textContent = '📝 Submit topic test';
   testBtn.type = 'button';
   testBtn.onclick = function () {
-    document.querySelector('.tabs button[data-tab="pastquestions"]').click();
+    document.querySelector('.tabs button[data-tab="assessment"]').click();
+    showAssessmentSection('upload');
     document.getElementById('ttSubject').value = topic.SubjectID;
     loadTopicsForTest().then(function () {
       document.getElementById('ttTopic').value = topic.TopicID;
