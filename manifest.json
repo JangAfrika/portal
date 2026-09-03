@@ -1,0 +1,16 @@
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "JangAfrika",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "JAL",
+  "start_url": "/",
+  "theme_color": "#ffffff",
+  "share_target": {
+    "method": "GET"
+  },
+  "id": "ja",
+  "description": "A learning platform to support students and parents to interacts and ensure progress"
+}
