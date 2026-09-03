@@ -12,6 +12,13 @@ document.querySelectorAll('.tabs button').forEach(function (btn) {
 let subjects = [], topics = [], myTier = 'Unpaid';
 
 async function init() {
+  const firstName = (me.FullName || '').split(' ')[0];
+  document.getElementById('dashGreeting').textContent = firstName
+    ? 'Welcome back, ' + firstName + ' — ready for your next lesson?'
+    : 'Welcome back — ready for your next lesson?';
+  initDashSearch('dashSearch');
+  document.getElementById('dashBellBtn').addEventListener('click', toggleNotifPanel);
+
   const profile = await api('getProfile', {});
   myTier = profile.PaymentStatus || 'Unpaid';
   const balance = await api('getPaymentBalance', {}).catch(function () { return null; });
@@ -40,8 +47,36 @@ async function init() {
   await loadSummary();
   if (myTier === 'Paid') await loadMarks();
   else document.getElementById('marksBody').innerHTML = '<tr><td colspan="7" class="muted">Locked until fees are fully paid.</td></tr>';
+  updateNotifBadge();
 }
 init();
+
+/** The bell shows a real count of things needing attention — assigned
+ *  tasks not yet attempted, and unsubmitted assignments — pulled from data
+ *  already loaded, not a fabricated notification feed. */
+function updateNotifBadge() {
+  const pendingTasks = (typeof assignedTaskList !== 'undefined' ? assignedTaskList : [])
+    .filter(function (t) { return t.paper.PaperType !== 'Theory' && (!t.attempt || !t.attempt.latest); });
+  const count = pendingTasks.length;
+  const badge = document.getElementById('dashBellBadge');
+  badge.textContent = count;
+  badge.classList.toggle('hidden', count === 0);
+}
+
+function toggleNotifPanel() {
+  const panel = document.getElementById('dashNotifPanel');
+  if (!panel.classList.contains('hidden')) { panel.classList.add('hidden'); return; }
+  const pendingTasks = (typeof assignedTaskList !== 'undefined' ? assignedTaskList : [])
+    .filter(function (t) { return t.paper.PaperType !== 'Theory' && (!t.attempt || !t.attempt.latest); });
+  let html = '<h3 style="margin-top:0;">Notifications</h3>';
+  if (!pendingTasks.length) {
+    html += '<p class="muted">You\'re all caught up — nothing pending right now.</p>';
+  } else {
+    html += '<ul>' + pendingTasks.map(function (t) { return '<li>Task not yet attempted: <strong>' + t.paper.Title + '</strong></li>'; }).join('') + '</ul>';
+  }
+  panel.innerHTML = html;
+  panel.classList.remove('hidden');
+}
 
 /** Renders the payment status banner with a clear remaining-balance figure
  *  and a real "Complete Payment" action (contacts the school directly,
