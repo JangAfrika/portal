@@ -313,6 +313,12 @@ guardSubmit(document.getElementById('geminiForm'), async function () {
   toast('Gemini API key saved');
 });
 
+guardClick(document.getElementById('repairPhotosBtn'), async function () {
+  const result = await api('repairProfilePhotoUrls', {});
+  toast(result.message);
+  if (result.repaired > 0) await loadUsers();
+});
+
 // ---- Topic Tests (view-only for admin — teachers submit these from their own dashboard) --
 async function loadPastPapers() {
   const [rows, allTopics] = await Promise.all([api('listPastPapers', {}), api('listTopics', {})]);
